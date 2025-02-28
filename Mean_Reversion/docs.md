@@ -44,7 +44,7 @@ core/api.py: TokenPriceAPI for fetching cryptocurrency price data.
 core/indicators.py: MeanReversionIndicators and other technical indicators.
 tools/langchain_tools.py: LangChain tool implementations.
 
-## Usage
+Usage
 ### Basic Usage
 from ETHDenver2025.Mean_Reversion.tools.langchain_tools import get_token_price, mean_reversion_analyzer
 from ETHDenver2025.Mean_Reversion.advanced_strategy import get_token_mean_reversion_signal
