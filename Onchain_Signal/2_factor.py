@@ -2,10 +2,9 @@ import requests
 import datetime
 import numpy as np
 
-# === API KEYS (Replace with your actual keys) ===
+TOKEN = "btc"
 COINGECKO_API_URL = "https://api.coingecko.com/api/v3/global"
 WHALE_ALERT_API_KEY = "O78CBmluLQUT9ZZ59i3Pi5F1mxjgYV4B"
-
 
 def get_current_btc_dominance():
     response = requests.get(f"{COINGECKO_API_URL}/global")
@@ -14,7 +13,6 @@ def get_current_btc_dominance():
         return data["data"]["market_cap_percentage"]["btc"]
     return None
 
-
 def get_historical_btc_dominance(days=30):
     url = f"{COINGECKO_API_URL}/coins/bitcoin/market_chart?vs_currency=usd&days={days}"
     response = requests.get(url)
@@ -22,15 +20,14 @@ def get_historical_btc_dominance(days=30):
     if response.status_code == 200:
         data = response.json()["market_caps"]
         btc_dominance_values = [item[1] for item in data]
-        return np.mean(btc_dominance_values)
+        return np.mean(_dominance_values)
     return None
-
 
 def get_current_whale_transactions(min_value=1000000):
     params = {
         "api_key": WHALE_ALERT_API_KEY,
         "min_value": min_value, 
-        "currency": "btc"
+        "currency": TOKEN
     }
     response = requests.get("https://api.whale-alert.io/v1/transactions", params=params)
     
@@ -38,7 +35,6 @@ def get_current_whale_transactions(min_value=1000000):
         data = response.json()
         return len(data.get("transactions", []))
     return None
-
 
 def get_historical_whale_transactions():
     daily_whale_counts = []
@@ -55,8 +51,8 @@ def get_historical_whale_transactions():
 
 # === RISK SIGNAL GENERATION ===
 def generate_risk_signals():
-    current_btc_dom = get_current_btc_dominance()
-    historical_btc_dom = get_historical_btc_dominance()
+    current__dom = get_current__dominance()
+    historical__dom = get_historical__dominance()
     
     current_whales = get_current_whale_transactions()
     historical_whales = get_historical_whale_transactions()
@@ -64,15 +60,15 @@ def generate_risk_signals():
     risk_score = 0
     signal_messages = []
     
-    # BTC Dominance Risk Calculation
-    if current_btc_dom and historical_btc_dom:
-        deviation = ((current_btc_dom - historical_btc_dom) / historical_btc_dom) * 100
-        if deviation > 5:  #FIXME: Temp use BTC Dom >5% over historical avg
+    #  Dominance Risk Calculation
+    if current__dom and historical__dom:
+        deviation = ((current__dom - historical__dom) / historical__dom) * 100
+        if deviation > 5:  #FIXME: Temp use  Dom >5% over historical avg
             risk_score += 2
-            signal_messages.append(f"🚨 BTC Dominance is {deviation:.2f}% above historical average.")
-        elif deviation < -5:  # BTC Dom significantly lower
+            signal_messages.append(f"🚨  Dominance is {deviation:.2f}% above historical average.")
+        elif deviation < -5:  #  Dom significantly lower
             risk_score += 1
-            signal_messages.append(f"⚠️ BTC Dominance is {deviation:.2f}% below historical average.")
+            signal_messages.append(f"⚠️  Dominance is {deviation:.2f}% below historical average.")
 
     # Whale Transaction Risk Calculation
     if current_whales and historical_whales:
@@ -94,7 +90,7 @@ def generate_risk_signals():
 
     return {"risk_score": risk_score, "level": signal_level, "signals": signal_messages}
 
-# === RUN & PRINT RESULTS ===
+
 if __name__ == "__main__":
     risk_result = generate_risk_signals()
     
