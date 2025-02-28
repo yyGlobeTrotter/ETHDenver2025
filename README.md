@@ -1,1 +1,0 @@
-# ETHDenver2025
