@@ -15,6 +15,9 @@ coinbase-agentkit = "0.1.2"
 coinbase-agentkit-langchain = "0.1.0"
 langchain-community = "^0.3.18"
 langchain-core = "^0.3.40"
+pandas = "^2.2.3"
+numpy = ">=1.26.4,<2"
+matplotlib = "^3.10.1"
 
 [tool.poetry.scripts]
 start-agent = "chatbot:main"

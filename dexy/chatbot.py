@@ -5,15 +5,15 @@ import time
 
 from dotenv import load_dotenv
 
-from mult import multiply
-
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 
-## from langchain.agents import load_tools
-## from langchain_community.agent_toolkits.load_tools import load_tools
+from langchain_community.agent_toolkits.load_tools import load_tools
+
+from tools.multiply import MultiplyTool
+
 
 from coinbase_agentkit import (
     AgentKit,
@@ -111,8 +111,7 @@ def initialize_agent():
     with open(wallet_data_file, "w") as f:
         f.write(wallet_data_json)
 
-    ## mult_tool = load_tools(["multiply"])
-    custom_tool = [multiply]
+    custom_tool = [MultiplyTool()]
 
     # Transform agentkit configuration into langchain tools
     tools = get_langchain_tools(agentkit) + custom_tool
