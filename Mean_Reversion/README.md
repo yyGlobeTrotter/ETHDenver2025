@@ -73,9 +73,6 @@ from langchain.schema import SystemMessage
 
 See `example.py` for complete examples of using the tools directly and with LangChain agents.
 
-## Code Consolidation
-
-This project has recently undergone a code consolidation to reduce redundancy and improve maintainability. See `CONSOLIDATION_SUMMARY.md` for details.
 
 ## License
 
