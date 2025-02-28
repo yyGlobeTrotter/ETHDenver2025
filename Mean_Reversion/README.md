@@ -283,6 +283,26 @@ api.base_url = "https://your-api-provider.com/api/v1"
 - Risk management strategies
 - Sentiment analysis integration
 
+## Environment Setup
+
+This project requires an OpenAI API key for some functionality. Set up your environment variables:
+
+1. Create a `.env` file in the project root with:
+   ```
+   OPENAI_API_KEY=your_api_key_here
+   ```
+
+2. Or set the environment variable directly:
+   ```bash
+   # On Linux/Mac
+   export OPENAI_API_KEY=your_api_key_here
+   
+   # On Windows
+   set OPENAI_API_KEY=your_api_key_here
+   ```
+
+**Important:** Never commit your API keys to version control.
+
 ## License
 
 MIT

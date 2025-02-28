@@ -8,14 +8,14 @@ import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 from langchain_core.tools import tool
 
-from token_price_tool import (
+from ETHDenver2025.Mean_Reversion.token_price_tool import (
     TokenPriceAPI, 
     MeanReversionCalculator,
     get_token_price, 
     get_token_z_score,
     get_token_rsi
 )
-from advanced_strategy import (
+from ETHDenver2025.Mean_Reversion.advanced_strategy import (
     MeanReversionStrategy,
     get_token_mean_reversion_signal
 )
