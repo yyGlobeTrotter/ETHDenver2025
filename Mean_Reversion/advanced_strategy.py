@@ -7,7 +7,8 @@ import numpy as np
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 from langchain_core.tools import tool, BaseTool
-from ETHDenver2025.Mean_Reversion.token_price_tool import TokenPriceAPI, MeanReversionCalculator
+from ETHDenver2025.Mean_Reversion.core.api import TokenPriceAPI
+from ETHDenver2025.Mean_Reversion.core.indicators import MeanReversionIndicators as MeanReversionCalculator
 
 class MeanReversionStrategy:
     """Implements an advanced mean reversion trading strategy."""

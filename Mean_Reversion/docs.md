@@ -26,7 +26,7 @@ content_copy
 download
 Use code with caution.
 Markdown
-Project Structure
+## Project Structure
 
 advanced_strategy.py: MeanReversionStrategy class, backtesting, visualization, and LangChain tools.
 
@@ -34,17 +34,21 @@ algo_trading_toolkit.py: AlgoTradingStrategy base class, MACrossoverStrategy, ba
 
 example.py: Usage examples (direct and with LangChain agent).
 
+mean_reversion_metrics.py: Core calculations for mean reversion indicators (Z-score, RSI, Bollinger Bands).
+
 README.md: This documentation.
 
 test_mean_reversion.py: Test functions.
 
-token_price_tool.py: TokenPriceAPI, MeanReversionCalculator, and basic LangChain tools.
+core/api.py: TokenPriceAPI for fetching cryptocurrency price data.
+core/indicators.py: MeanReversionIndicators and other technical indicators.
+tools/langchain_tools.py: LangChain tool implementations.
 
-Usage
-Basic Usage
-from token_price_tool import get_token_price, mean_reversion_analyzer
-from advanced_strategy import get_token_mean_reversion_signal
-from algo_trading_toolkit import get_ma_crossover_signal, compare_trading_strategies
+## Usage
+### Basic Usage
+from ETHDenver2025.Mean_Reversion.tools.langchain_tools import get_token_price, mean_reversion_analyzer
+from ETHDenver2025.Mean_Reversion.advanced_strategy import get_token_mean_reversion_signal
+from ETHDenver2025.Mean_Reversion.algo_trading_toolkit import get_ma_crossover_signal, compare_trading_strategies
 
 # Get current price
 price = get_token_price.invoke({"token_id": "bitcoin"})
@@ -55,7 +59,51 @@ content_copy
 download
 Use code with caution.
 Python
-LangChain Agent Integration
+### Using Mean Reversion Metrics Directly
+
+The `mean_reversion_metrics.py` file provides a `MeanReversionMetrics` class with static methods for calculating key technical indicators used in mean reversion strategies:
+
+```python
+from mean_reversion_metrics import MeanReversionMetrics
+import requests
+import json
+
+# Fetch historical price data (example using CoinGecko API)
+def get_historical_prices(token_id, days=30):
+    url = f"https://api.coingecko.com/api/v3/coins/{token_id}/market_chart"
+    params = {
+        "vs_currency": "usd",
+        "days": days,
+        "interval": "daily"
+    }
+    response = requests.get(url, params=params)
+    data = json.loads(response.text)
+    prices = [price[1] for price in data["prices"]]
+    return prices
+
+# Calculate Z-score
+prices = get_historical_prices("bitcoin")
+z_score = MeanReversionMetrics.calculate_z_score(prices, window=14)
+print(f"Bitcoin Z-score: {z_score:.2f}")
+
+# Calculate RSI
+rsi = MeanReversionMetrics.calculate_rsi(prices, window=14)
+print(f"Bitcoin RSI: {rsi:.2f}")
+
+# Calculate Bollinger Bands
+bb_data = MeanReversionMetrics.calculate_bollinger_bands(prices, window=20, num_std=2.0)
+print(f"Middle Band: ${bb_data['middle_band']:.2f}")
+print(f"Upper Band: ${bb_data['upper_band']:.2f}")
+print(f"Lower Band: ${bb_data['lower_band']:.2f}")
+print(f"Percent B: {bb_data['percent_b']:.2f}")
+```
+
+Available methods:
+- `calculate_z_score(prices, window)`: Calculates the Z-score (standard deviations from mean)
+- `calculate_rsi(prices, window)`: Calculates the Relative Strength Index
+- `calculate_bollinger_bands(prices, window, num_std)`: Calculates Bollinger Bands and returns a dictionary with bands, current price, and percent B
+
+### LangChain Agent Integration
 from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.tools.render import format_tool_to_openai_function
@@ -83,7 +131,7 @@ content_copy
 download
 Use code with caution.
 Python
-Advanced Features
+## Advanced Features
 
 Backtesting: backtest_mean_reversion_strategy, backtest_ma_crossover_strategy
 
@@ -150,10 +198,162 @@ algo_trading_toolkit.py: AlgoTradingStrategy base class, MACrossoverStrategy, an
 
 example.py: Demonstrates usage.
 
+mean_reversion_metrics.py: Core calculations for Z-score, RSI, and Bollinger Bands metrics.
+
 test_mean_reversion.py: Test functions.
 
-token_price_tool.py: TokenPriceAPI, MeanReversionCalculator, and basic tools.
+core/api.py: TokenPriceAPI for fetching cryptocurrency price data.
+core/indicators.py: MeanReversionIndicators and other technical indicators.
+tools/langchain_tools.py: LangChain tool implementations.
 
 content_copy
 download
 Use code with caution.
+
+## Enhanced Technical Indicators with Advanced LangChain Features
+
+This module extends the Crypto Trading Strategy Tools project with improved features from the LangChain framework, making the tools more robust, informative, and flexible for both users and agents.
+
+### Features Added
+
+The enhanced tools leverage several advanced LangChain features:
+
+#### 1. Enhanced Error Handling
+
+All tools now implement proper error handling using `ToolException` and the `handle_tool_error` parameter:
+
+```python
+@tool(handle_tool_error=True)
+def get_token_indicators(token_id: str, window: int = 10) -> str:
+    """Get comprehensive technical indicators for a cryptocurrency token."""
+    # ...
+```
+
+This allows tools to gracefully handle common errors like:
+- Invalid token IDs
+- API rate limiting
+- Insufficient data points
+
+Instead of crashing, tools can return helpful fallback messages or explanations.
+
+#### 2. Content and Artifact Responses
+
+Some tools now implement the `response_format="content_and_artifact"` pattern, which allows them to return both:
+- Human-readable analysis text (for the model/user)
+- Structured data (for downstream processing)
+
+```python
+@tool(response_format="content_and_artifact", handle_tool_error=True)
+def get_advanced_indicators(token_id: str, window: int = 10) -> Tuple[str, Dict[str, Any]]:
+    """Get technical indicators with both human-readable analysis and structured data."""
+    # ...
+    return message, indicators
+```
+
+This provides flexibility for using the tools in different contexts - whether generating reports for humans or processing data for algorithms.
+
+#### 3. Improved Parameter Schemas with Pydantic
+
+All parameters now have detailed schema definitions using Pydantic models with field descriptions:
+
+```python
+class IndicatorParams(BaseModel):
+    """Parameters for technical indicator calculations."""
+    token_id: str = Field(description="The ID of the token (e.g., 'bitcoin', 'ethereum', 'solana')")
+    window: int = Field(default=10, description="The lookback window for indicator calculations (in days)")
+    num_std: float = Field(default=2.0, description="Number of standard deviations for Bollinger Bands")
+```
+
+This provides better documentation and validation for parameters, improving both accuracy and user experience.
+
+### New Tools
+
+The enhanced module includes these new LangChain tools:
+
+1. **`get_token_indicators`**: Comprehensive technical analysis with graceful error handling
+2. **`get_advanced_indicators`**: Analysis with both text and structured data artifacts
+3. **`get_historical_indicators`**: Time-series analysis with custom error messages
+
+### IndicatorService Class
+
+The core functionality is provided by the `IndicatorService` class, which handles:
+- API requests with retry logic
+- Technical indicator calculations
+- Data processing and formatting
+- Error handling and propagation
+
+### Usage Examples
+
+#### Basic Usage
+
+```python
+from technical_indicators import get_token_indicators
+
+# Get a comprehensive analysis of Bitcoin indicators
+analysis = get_token_indicators("bitcoin")
+print(analysis)
+```
+
+#### Working with Content and Artifacts
+
+```python
+from technical_indicators import get_advanced_indicators
+
+# Get both analysis text and structured data
+message, data = get_advanced_indicators("ethereum")
+
+# Use the message for display
+print(message)
+
+# Use the structured data for computation or visualization
+print(f"Current price: ${data['current_price']}")
+print(f"Z-Score: {data['indicators']['z_score']['value']}")
+```
+
+#### Error Handling
+
+```python
+from technical_indicators import get_historical_indicators
+
+# This will return a helpful error message instead of crashing
+result = get_historical_indicators("bitcoin", days=3, window=100)
+print(result)  # "Data not available or insufficient price history. Try a different token or time window."
+```
+
+### Demo Scripts
+
+Two demo scripts demonstrate the new functionality:
+
+1. **`test_indicators.py`**: Demonstrates all features with visualizations
+2. **`example.py`**: Integrates the tools with a LangChain agent and shows direct usage
+
+### Integration with LangChain Agents
+
+The tools are designed to work seamlessly with LangChain agents:
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from technical_indicators import get_token_indicators, get_advanced_indicators
+
+# Define the tools to use
+tools = [get_token_indicators, get_advanced_indicators]
+
+# Create the agent
+agent = create_tool_calling_agent(llm, tools, system_message)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+# Use the agent
+result = agent_executor.invoke({"input": "What are the technical indicators for Ethereum?"})
+```
+
+### Benefits
+
+These enhancements provide several key benefits:
+
+1. **Improved Robustness**: Better error handling means fewer crashes and more informative fallbacks
+2. **Greater Flexibility**: Content and artifact responses enable both human and machine consumption
+3. **Better Documentation**: Detailed parameter schemas improve discoverability and usability
+4. **Enhanced Integration**: Cleaner integration with LangChain agents and agentic workflows
+
+By implementing these enhanced features from the LangChain documentation, the tools are now more powerful, user-friendly, and ready for production use.
