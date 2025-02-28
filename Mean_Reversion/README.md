@@ -13,7 +13,6 @@ Mean_Reversion/
 │   └── indicators.py - Technical indicator calculations
 ├── tools/            - Tool integrations
 │   └── langchain_tools.py - LangChain tool wrappers
-├── token_price_tool.py - Legacy API wrapper (for compatibility)
 ├── example.py        - Example usage
 └── test_indicators.py - Test script
 ```
