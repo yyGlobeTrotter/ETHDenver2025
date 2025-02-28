@@ -26,7 +26,7 @@ content_copy
 download
 Use code with caution.
 Markdown
-Project Structure
+## Project Structure
 
 advanced_strategy.py: MeanReversionStrategy class, backtesting, visualization, and LangChain tools.
 
@@ -34,14 +34,16 @@ algo_trading_toolkit.py: AlgoTradingStrategy base class, MACrossoverStrategy, ba
 
 example.py: Usage examples (direct and with LangChain agent).
 
+mean_reversion_metrics.py: Core calculations for mean reversion indicators (Z-score, RSI, Bollinger Bands).
+
 README.md: This documentation.
 
 test_mean_reversion.py: Test functions.
 
 token_price_tool.py: TokenPriceAPI, MeanReversionCalculator, and basic LangChain tools.
 
-Usage
-Basic Usage
+## Usage
+### Basic Usage
 from token_price_tool import get_token_price, mean_reversion_analyzer
 from advanced_strategy import get_token_mean_reversion_signal
 from algo_trading_toolkit import get_ma_crossover_signal, compare_trading_strategies
@@ -55,7 +57,51 @@ content_copy
 download
 Use code with caution.
 Python
-LangChain Agent Integration
+### Using Mean Reversion Metrics Directly
+
+The `mean_reversion_metrics.py` file provides a `MeanReversionMetrics` class with static methods for calculating key technical indicators used in mean reversion strategies:
+
+```python
+from mean_reversion_metrics import MeanReversionMetrics
+import requests
+import json
+
+# Fetch historical price data (example using CoinGecko API)
+def get_historical_prices(token_id, days=30):
+    url = f"https://api.coingecko.com/api/v3/coins/{token_id}/market_chart"
+    params = {
+        "vs_currency": "usd",
+        "days": days,
+        "interval": "daily"
+    }
+    response = requests.get(url, params=params)
+    data = json.loads(response.text)
+    prices = [price[1] for price in data["prices"]]
+    return prices
+
+# Calculate Z-score
+prices = get_historical_prices("bitcoin")
+z_score = MeanReversionMetrics.calculate_z_score(prices, window=14)
+print(f"Bitcoin Z-score: {z_score:.2f}")
+
+# Calculate RSI
+rsi = MeanReversionMetrics.calculate_rsi(prices, window=14)
+print(f"Bitcoin RSI: {rsi:.2f}")
+
+# Calculate Bollinger Bands
+bb_data = MeanReversionMetrics.calculate_bollinger_bands(prices, window=20, num_std=2.0)
+print(f"Middle Band: ${bb_data['middle_band']:.2f}")
+print(f"Upper Band: ${bb_data['upper_band']:.2f}")
+print(f"Lower Band: ${bb_data['lower_band']:.2f}")
+print(f"Percent B: {bb_data['percent_b']:.2f}")
+```
+
+Available methods:
+- `calculate_z_score(prices, window)`: Calculates the Z-score (standard deviations from mean)
+- `calculate_rsi(prices, window)`: Calculates the Relative Strength Index
+- `calculate_bollinger_bands(prices, window, num_std)`: Calculates Bollinger Bands and returns a dictionary with bands, current price, and percent B
+
+### LangChain Agent Integration
 from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.tools.render import format_tool_to_openai_function
@@ -83,7 +129,7 @@ content_copy
 download
 Use code with caution.
 Python
-Advanced Features
+## Advanced Features
 
 Backtesting: backtest_mean_reversion_strategy, backtest_ma_crossover_strategy
 
@@ -149,6 +195,8 @@ advanced_strategy.py: MeanReversionStrategy class and related LangChain tools.
 algo_trading_toolkit.py: AlgoTradingStrategy base class, MACrossoverStrategy, and related tools.
 
 example.py: Demonstrates usage.
+
+mean_reversion_metrics.py: Core calculations for Z-score, RSI, and Bollinger Bands metrics.
 
 test_mean_reversion.py: Test functions.
 
