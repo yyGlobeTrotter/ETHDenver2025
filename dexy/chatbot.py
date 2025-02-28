@@ -5,19 +5,22 @@ import time
 
 from dotenv import load_dotenv
 
+from mult import multiply
+
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 
+## from langchain.agents import load_tools
+## from langchain_community.agent_toolkits.load_tools import load_tools
+
 from coinbase_agentkit import (
     AgentKit,
     AgentKitConfig,
-    
     CdpWalletProvider,
     CdpWalletProviderConfig,
     cdp_api_action_provider,
-    
     cdp_wallet_action_provider,
     erc20_action_provider,
     pyth_action_provider,
@@ -68,12 +71,13 @@ wallet_data_file = "wallet_data.txt"
 
 load_dotenv()
 
+
 def initialize_agent():
     """Initialize the agent with CDP Agentkit."""
 
     # Initialize LLM: https://platform.openai.com/docs/models#gpt-4o
     llm = ChatOpenAI(model="gpt-4o-mini")
-    
+
     # Initialize WalletProvider: https://docs.cdp.coinbase.com/agentkit/docs/wallet-management
     wallet_data = None
     if os.path.exists(wallet_data_file):
@@ -85,36 +89,39 @@ def initialize_agent():
         cdp_config = CdpWalletProviderConfig(wallet_data=wallet_data)
 
     wallet_provider = CdpWalletProvider(cdp_config)
-    
+
     # Initialize AgentKit: https://docs.cdp.coinbase.com/agentkit/docs/agent-actions
-    agentkit = AgentKit(AgentKitConfig(
-        wallet_provider=wallet_provider,
-        action_providers=[
-            
-            cdp_wallet_action_provider(),
-            
-            cdp_api_action_provider(),
-            erc20_action_provider(),
-            pyth_action_provider(),
-            wallet_action_provider(),
-            weth_action_provider(),
-        ]
-    ))
-    
+    agentkit = AgentKit(
+        AgentKitConfig(
+            wallet_provider=wallet_provider,
+            action_providers=[
+                cdp_wallet_action_provider(),
+                cdp_api_action_provider(),
+                erc20_action_provider(),
+                pyth_action_provider(),
+                wallet_action_provider(),
+                weth_action_provider(),
+            ],
+        )
+    )
+
     # Save wallet to file for reuse
     wallet_data_json = json.dumps(wallet_provider.export_wallet().to_dict())
 
     with open(wallet_data_file, "w") as f:
         f.write(wallet_data_json)
-    
+
+    ## mult_tool = load_tools(["multiply"])
+    custom_tool = [multiply]
+
     # Transform agentkit configuration into langchain tools
-    tools = get_langchain_tools(agentkit)
-    
+    tools = get_langchain_tools(agentkit) + custom_tool
+
     # Store buffered conversation history in memory.
     memory = MemorySaver()
-    
+
     config = {"configurable": {"thread_id": "CDP Agentkit Chatbot Example!"}}
-    
+
     # Create ReAct Agent using the LLM and CDP Agentkit tools.
     return create_react_agent(
         llm,
