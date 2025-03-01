@@ -11,6 +11,8 @@ import os
 import time
 from typing import List, Dict
 
+# Set the OpenAI API key directly
+
 from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.tools.render import format_tool_to_openai_function
@@ -27,6 +29,9 @@ from langchain_tools import (
     get_token_indicators,
     get_advanced_indicators,
     get_historical_indicators,
+    # New OHLC tools
+    get_ohlc_data,
+    get_ohlc_indicators,
 )
 
 
@@ -99,17 +104,26 @@ def main():
         print("\n" + "-" * 50 + "\n")
 
 
+def get_all_tools():
+    """Get all tools for the enhanced agent."""
+    return [
+        get_token_indicators, 
+        get_advanced_indicators, 
+        get_historical_indicators,
+        # Add OHLC tools
+        get_ohlc_data,
+        get_ohlc_indicators
+    ]
+
+
 def create_enhanced_agent():
-    """
-    Create a LangChain agent with our enhanced technical indicator tools.
-    These tools incorporate advanced LangChain features like error handling
-    and content_and_artifact responses.
-    """
-    # Define the tools to use
-    tools = [get_token_indicators, get_advanced_indicators, get_historical_indicators]
+    """Create an enhanced agent with technical indicator tools."""
+    # Get all tools
+    tools = get_all_tools()
 
     # Convert tools to functions for OpenAI function calling
-    functions = [format_tool_to_openai_function(t) for t in tools]
+    from langchain_core.utils.function_calling import convert_to_openai_function
+    functions = [convert_to_openai_function(t) for t in tools]
 
     # Create system message with enhanced capabilities explanation
     system_message = SystemMessage(
@@ -119,14 +133,18 @@ Your tools have the following advanced capabilities:
 1. Error handling: You can handle API errors and provide helpful fallback responses.
 2. Content and artifact responses: Some tools return both human-readable text and structured data.
 3. Detailed schema information: Tools have well-defined parameters with descriptions.
+4. OHLC Data: You can analyze OHLC (Open, High, Low, Close) candle data for detailed technical analysis.
 
 When analyzing cryptocurrencies:
 - Provide insights based on multiple technical indicators (Z-score, RSI, Bollinger Bands)
+- Can use advanced indicators from OHLC data like ATR and MACD when appropriate
 - Explain what the indicators mean and how they can be interpreted
 - Be clear about the timeframes used in the analysis (default is 10-day window)
 - Remind users that technical analysis is based on historical patterns
 - Avoid making specific financial recommendations
 - When errors occur, explain them in user-friendly terms
+
+If users ask about OHLC data or more detailed technical analysis, use the OHLC-specific tools.
 """
     )
 
@@ -137,10 +155,27 @@ When analyzing cryptocurrencies:
         print("Please set it to use the LLM functionality.")
 
     # Initialize ChatGPT model
-    llm = ChatOpenAI(model="gpt-4", temperature=0, api_key=api_key, functions=functions)
+    # Note: All tools now use DeFi Llama API by default
+    from langchain.agents import AgentExecutor
+    from langchain.agents.openai_functions_agent.base import OpenAIFunctionsAgent
+    from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-    # Create the agent
-    agent = create_tool_calling_agent(llm, tools, system_message)
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            system_message,
+            ("user", "{input}"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
+        ]
+    )
+
+    llm = ChatOpenAI(model="gpt-4", temperature=0, api_key=api_key)
+    
+    agent = OpenAIFunctionsAgent(
+        llm=llm,
+        tools=tools,
+        prompt=prompt
+    )
+    
     return AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 
@@ -183,6 +218,9 @@ def demo_enhanced_examples():
         "Is Bitcoin showing mean reversion signals based on recent data?",
         "What do the historical indicators for Bitcoin show over the last 5 days?",
         "What does a Bollinger %B value of 1.2 mean for Ethereum?",
+        # New OHLC-related questions
+        "Show me the OHLC data for Bitcoin",
+        "What do the OHLC-based indicators show for Ethereum?",
     ]
 
     print("\n🤖 CRYPTO TECHNICAL ANALYSIS AGENT - EXAMPLES")
@@ -270,6 +308,66 @@ def demo_content_and_artifact():
         print(f"\n❌ Error: {str(e)}")
 
     print("\n" + "=" * 80)
+
+
+def demo_ohlc_data():
+    """Demonstrate OHLC data analysis with the enhanced agent."""
+    agent_executor = create_enhanced_agent()
+
+    print("\n🤖 DEMONSTRATING OHLC DATA ANALYSIS")
+    print("=" * 80)
+
+    questions = [
+        "Show me the OHLC data for Bitcoin for the last 30 days",
+        "What do the advanced OHLC-based indicators tell us about Ethereum with 60 days of data?"
+    ]
+
+    for question in questions:
+        print(f'\nQuery: "{question}"')
+        print("-" * 80)
+
+        try:
+            result = agent_executor.invoke({"input": question})
+
+            # Extract the message chain to inspect the ToolMessage artifacts
+            messages = result.get("intermediate_steps", [])
+
+            print(f"\n🤖 Response: {result['output']}")
+
+            # Look for any ToolMessages with artifacts in the message chain
+            print("\nChecking for artifact data in the responses...")
+            for action, message in messages:
+                if (
+                    isinstance(message, ToolMessage)
+                    and hasattr(message, "artifact")
+                    and message.artifact
+                ):
+                    print(f"\n✅ Found artifact data from tool: {message.name}")
+                    
+                    if message.name == "get_ohlc_data":
+                        data = message.artifact
+                        print(f"First candle: {data[0]}")
+                        print(f"Latest candle: {data[-1]}")
+                        print(f"Total candles: {len(data)}")
+                    
+                    elif message.name == "get_ohlc_indicators":
+                        data = message.artifact
+                        print(f"Token: {data['token_id']}")
+                        print(f"Current price: ${data['current_price']:.2f}")
+                        print(f"Z-Score: {data['metrics']['z_score']['value']:.2f}")
+                        print(f"RSI: {data['metrics']['rsi']['value']:.2f}")
+                        # OHLC-specific indicators
+                        if 'ohlc_specific' in data['metrics']:
+                            ohlc = data['metrics']['ohlc_specific']
+                            print(f"ATR: {ohlc['atr']['value']:.2f}")
+                            print(f"MACD Line: {ohlc['macd']['macd_line']:.4f}")
+                            print(f"MACD Signal: {ohlc['macd']['signal_line']:.4f}")
+                        
+        except Exception as e:
+            print(f"\n❌ Error: {str(e)}")
+
+        print("\n" + "=" * 80)
+        time.sleep(2)  # Add delay between questions
 
 
 def demo_direct_tool_usage():
@@ -386,7 +484,8 @@ if __name__ == "__main__":
     print("CRYPTO TRADING STRATEGY TOOLS EXAMPLES")
     print("======================================")
     print("\nThis script demonstrates both the original tools and")
-    print("the enhanced technical indicator tools with advanced LangChain features.")
+    print("the enhanced technical indicator tools with advanced LangChain features,")
+    print("including OHLC data from CoinAPI.")
     print(
         "\nChoose which demo to run by uncommenting the appropriate function call below."
     )
@@ -401,6 +500,24 @@ if __name__ == "__main__":
     # demo_enhanced_examples()
     # demo_enhanced_error_handling()
     # demo_content_and_artifact()
+    
+    # OHLC data functionality
+    # demo_ohlc_data()
 
-    # By default, run the enhanced examples
-    demo_enhanced_examples()
+    # Options to run:
+    print("\nAvailable demo options:")
+    print("1. Basic examples (indicators, mean reversion)")
+    print("2. OHLC data analysis (open, high, low, close indicators)")
+    print("3. Run interactive agent")
+    
+    choice = input("\nEnter your choice (1, 2, or 3): ").strip()
+    
+    if choice == "1":
+        demo_enhanced_examples()
+    elif choice == "2":
+        demo_ohlc_data()
+    elif choice == "3":
+        run_enhanced_agent()
+    else:
+        print("Invalid choice, running basic examples as default.")
+        demo_enhanced_examples()
