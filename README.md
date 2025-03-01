@@ -2,7 +2,7 @@
 🚀 **By Team VinRouge**  
 💡 **Blending On-Chain & Off-Chain Intelligence for Next-Gen Crypto Trading and Risk Management**  
 
-DexyBot is a cutting-edge **AI-driven risk signal generator and autonomous execution engine** designed to help traders and investors navigate crypto markets with precision. We fuse **quant-driven off-chain indicators** with **real-time on-chain data**, creating **a seamless end-to-end trading intelligence pipeline**—from **Telegram bot prompts** to **AI-powered execution insights**.
+VinRouge DexyBot is a cutting-edge **AI-driven risk signal generator and autonomous execution engine** designed to help traders and investors navigate crypto markets with precision. We fuse **quant-driven off-chain indicators** with **real-time on-chain data**, creating **a seamless end-to-end trading intelligence pipeline**—from **Telegram bot prompts** to **AI-powered execution insights**.
 
 ---
 
@@ -46,19 +46,19 @@ DexyBot is a cutting-edge **AI-driven risk signal generator and autonomous execu
 
 ---
 
-## **🚀 How DexyBot Works – The Magic Formula**
+## **🚀 How VinRouge DexyBot Works – The Magic Formula**
 ⚡ **AI + On-Chain + Off-Chain = Superior Risk Signals**  
 
 1️⃣ **User Initiates a Prompt**  
    - Via **Telegram bot**, requesting **market risk insights** on crypto tokens with well-established market cap.  
 
-2️⃣ **DexyBot Generates a Multi-Layered Risk Signal**  
+2️⃣ **VinRouge DexyBot Generates a Multi-Layered Risk Signal**  
    - **Off-Chain Technicals:** RSI, Z-score, Bollinger Bands.  
    - **On-Chain Intelligence:** Whale transactions, market dominance, exchange flows.  
    - **Proprietary AI Risk Multiplier:** Dynamically adjusts signal weightings based on live data.  
 
 3️⃣ **AI-Driven Insights Are Delivered**  
-   - DexyBot **interprets market conditions** and **delivers insights** back to the user.  
+   - VinRouge DexyBot **interprets market conditions** and **delivers insights** back to the user.  
    - These signals help users **refine trading decisions or even automate execution.**  
 
 4️⃣ **Next-Level On-Chain Actions** *(Future Feature 🚀)*  
@@ -92,7 +92,7 @@ python chatbot.py
 ---
 
 ## **📈 What’s Next?**
-💡 **Taking DexyBot from MVP to a Market-Dominating AI Trading Powerhouse**  
+💡 **Taking VinRouge DexyBot from MVP to a Market-Dominating AI Trading Powerhouse**  
 
 🔍 **Advanced Quant Research & AI Methodologies**
 - Deep learning models for **price action prediction**.
@@ -117,9 +117,9 @@ python chatbot.py
 - **Yield optimization** for DeFi LP strategies.
 
 🚀 **The Sky’s the Limit**  
-We're **building DexyBot to be the ultimate trading co-pilot**—an AI powerhouse for **both on-chain and off-chain traders**.  
+We're **building VinRouge DexyBot to be the ultimate trading co-pilot**—an AI powerhouse for **both on-chain and off-chain traders**.  
 
-🔥 **Team VinRouge is here to disrupt the game. Let’s make DexyBot a legend.**  
+🔥 **Team VinRouge is here to disrupt the game. Let’s make VinRouge DexyBot a legend.**  
 
 ---
 
