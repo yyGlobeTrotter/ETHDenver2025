@@ -239,3 +239,35 @@ def main():
 if __name__ == "__main__":
     print("Starting Agent...")
     main()
+
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+# Initialize AgentKit
+agent_executor, config = initialize_agent()
+
+@app.route("/status", methods=["GET"])
+def status():
+    return jsonify({"status": "AgentKit is running"}), 200
+
+@app.route("/query", methods=["POST"])
+def query():
+    data = request.json
+    user_message = data.get("message", "")
+    
+    if not user_message:
+        return jsonify({"error": "No message provided"}), 400
+    
+    # Get response from AgentKit
+    response_text = ""
+    for chunk in agent_executor.stream({"messages": [HumanMessage(content=user_message)]}, config):
+        if "agent" in chunk:
+            response_text = chunk["agent"]["messages"][0].content
+        elif "tools" in chunk:
+            response_text = chunk["tools"]["messages"][0].content
+
+    return jsonify({"response": response_text})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5050, debug=True)
