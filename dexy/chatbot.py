@@ -20,6 +20,7 @@ from tools.mean_reversion import (
     get_token_bollinger_bands,
     mean_reversion_analyzer,
 )
+from tools.whalesignal import generate_risk_signals, get_risk_multiplier, apply_risk_multiplier
 
 
 from coinbase_agentkit import (
@@ -118,6 +119,111 @@ def initialize_agent():
     with open(wallet_data_file, "w") as f:
         f.write(wallet_data_json)
 
+    # Create a custom whale signal tool
+    from langchain.tools import tool
+    
+    @tool
+    def integrated_crypto_analysis(token_id: str = "bitcoin") -> str:
+        """
+        Get integrated analysis combining mean reversion signals with whale dominance.
+        
+        Args:
+            token_id: The cryptocurrency to analyze (e.g., 'bitcoin', 'ethereum')
+            
+        Returns:
+            Detailed analysis with both technical indicators and whale activity
+        """
+        from tools.mean_reversion.core.api import TokenPriceAPI
+        from tools.mean_reversion.core.indicators import MeanReversionIndicators, MeanReversionService
+        
+        try:
+            # Get technical indicators
+            service = MeanReversionService()
+            metrics = service.get_all_metrics(token_id)
+            
+            # Extract key values
+            current_price = metrics["current_price"]
+            z_score = metrics["metrics"]["z_score"]["value"]
+            z_signal = metrics["metrics"]["z_score"]["interpretation"]
+            rsi = metrics["metrics"]["rsi"]["value"]
+            rsi_signal = metrics["metrics"]["rsi"]["interpretation"]
+            bb_data = metrics["metrics"]["bollinger_bands"]
+            bb_signal = bb_data["interpretation"]
+            percent_b = bb_data["percent_b"]
+            
+            # Calculate mean reversion score (simplified version)
+            # Z-score contribution (negative z-score = positive signal)
+            z_component = max(min(-z_score * 1.5, 5), -5)
+            
+            # RSI contribution
+            if rsi <= 30:
+                rsi_component = (30 - rsi) / 6  # 0 to 5 for RSI 30 to 0
+            elif rsi >= 70:
+                rsi_component = -(rsi - 70) / 6  # -5 to 0 for RSI 100 to 70
+            else:
+                rsi_component = 0
+                
+            # Bollinger Bands
+            if percent_b <= 0:
+                bb_component = min(abs(percent_b), 1) * 5  # 0 to 5
+            elif percent_b >= 1:
+                bb_component = -(percent_b - 1) * 5 if percent_b <= 2 else -5  # -5 to 0
+            else:
+                bb_component = -(percent_b - 0.5) * 10  # -5 to 5
+                
+            # Calculate mean reversion score (-10 to 10)
+            mr_score = z_component + rsi_component + bb_component
+            mr_score = max(min(mr_score, 10), -10)
+            
+            # Determine direction
+            if mr_score > 5:
+                direction = "STRONG UPWARD REVERSION POTENTIAL"
+            elif mr_score > 0:
+                direction = "MODERATE UPWARD REVERSION POTENTIAL"
+            elif mr_score > -5:
+                direction = "MODERATE DOWNWARD REVERSION POTENTIAL"
+            else:
+                direction = "STRONG DOWNWARD REVERSION POTENTIAL"
+            
+            # Get whale dominance signal
+            risk_data = generate_risk_signals()
+            risk_score = risk_data["risk_score"]
+            risk_level = risk_data["level"]
+            
+            # Apply multiplier
+            multiplier_data = apply_risk_multiplier(mr_score, risk_score)
+            multiplier = multiplier_data["multiplier"]
+            adjusted_score = multiplier_data["adjusted_value"]
+            
+            # Generate final analysis
+            return f"""
+=== INTEGRATED ANALYSIS FOR {token_id.upper()} ===
+
+PRICE & TECHNICAL INDICATORS:
+Current Price: ${current_price:.2f}
+Z-Score: {z_score:.2f} - {z_signal}
+RSI: {rsi:.2f} - {rsi_signal}
+Bollinger %B: {percent_b:.2f} - {bb_signal}
+
+MEAN REVERSION:
+Mean Reversion Score: {mr_score:.2f}
+Direction: {direction}
+
+WHALE DOMINANCE ANALYSIS:
+Risk Score: {risk_score} - {risk_level}
+Risk Signals: {', '.join(risk_data['signals']) if risk_data['signals'] else 'No specific risk signals detected'}
+
+INTEGRATED RESULT:
+Risk Multiplier: {multiplier:.1f}x ({multiplier_data['explanation']})
+Adjusted Score: {adjusted_score:.2f}
+Final Signal: {'STRONGER' if abs(adjusted_score) > abs(mr_score) else 'UNCHANGED'} {direction}
+
+RECOMMENDATION:
+{f'Consider a stronger position due to significant whale activity' if multiplier > 1 else 'Proceed with standard position sizing based on technical indicators'}
+            """
+        except Exception as e:
+            return f"Error analyzing {token_id}: {str(e)}"
+    
     custom_tool = [
         MultiplyTool(),
         get_token_price,
@@ -125,6 +231,7 @@ def initialize_agent():
         get_token_rsi,
         get_token_bollinger_bands,
         mean_reversion_analyzer,
+        integrated_crypto_analysis,  # Add the new integrated tool
     ]
 
     # Transform agentkit configuration into langchain tools
@@ -141,15 +248,27 @@ def initialize_agent():
         tools=tools,
         checkpointer=memory,
         state_modifier=(
-            "You are a helpful agent that can interact onchain using the Coinbase Developer Platform AgentKit. "
-            "You are empowered to interact onchain using your tools. If you ever need funds, you can request "
-            "them from the faucet if you are on network ID 'base-sepolia'. If not, you can provide your wallet "
+            "You are a helpful agent that can interact onchain using the Coinbase Developer Platform AgentKit "
+            "and analyze cryptocurrencies using advanced strategies. You have two key capabilities:\n\n"
+            
+            "1. BLOCKCHAIN INTERACTION: You can interact onchain using your CDP tools. If you ever need funds, you can "
+            "request them from the faucet if you are on network ID 'base-sepolia'. If not, you can provide your wallet "
             "details and request funds from the user. Before executing your first action, get the wallet details "
-            "to see what network you're on. If there is a 5XX (internal) HTTP error code, ask the user to try "
-            "again later. If someone asks you to do something you can't do with your currently available tools, "
-            "you must say so, and encourage them to implement it themselves using the CDP SDK + Agentkit, "
-            "recommend they go to docs.cdp.coinbase.com for more information. Be concise and helpful with your "
-            "responses. Refrain from restating your tools' descriptions unless it is explicitly requested."
+            "to see what network you're on.\n\n"
+            
+            "2. CRYPTO ANALYSIS: You have integrated technical analysis capabilities that combine mean reversion signals "
+            "with whale dominance indicators. For the most complete analysis, use the integrated_crypto_analysis tool, "
+            "which provides a comprehensive view considering both technical indicators and whale activity.\n\n"
+            
+            "When asked about trading analysis or market conditions, prioritize using the integrated_crypto_analysis "
+            "tool as it gives the most comprehensive view. If someone asks about specific technical indicators, "
+            "you can use the individual tools (get_token_price, get_token_z_score, etc.).\n\n"
+            
+            "If there is a 5XX (internal) HTTP error code, ask the user to try again later. If someone asks you to do "
+            "something you can't do with your currently available tools, you must say so, and encourage them to implement "
+            "it themselves using the CDP SDK + Agentkit, recommend they go to docs.cdp.coinbase.com for more information. "
+            "Be concise and helpful with your responses. Refrain from restating your tools' descriptions unless it is "
+            "explicitly requested."
         ),
     ), config
 

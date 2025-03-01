@@ -29,7 +29,6 @@ from langchain_tools import (
     get_token_indicators,
     get_advanced_indicators,
     get_historical_indicators,
-    # New OHLC tools
     get_ohlc_data,
     get_ohlc_indicators,
 )
@@ -504,20 +503,6 @@ if __name__ == "__main__":
     # OHLC data functionality
     # demo_ohlc_data()
 
-    # Options to run:
-    print("\nAvailable demo options:")
-    print("1. Basic examples (indicators, mean reversion)")
-    print("2. OHLC data analysis (open, high, low, close indicators)")
-    print("3. Run interactive agent")
-    
-    choice = input("\nEnter your choice (1, 2, or 3): ").strip()
-    
-    if choice == "1":
-        demo_enhanced_examples()
-    elif choice == "2":
-        demo_ohlc_data()
-    elif choice == "3":
-        run_enhanced_agent()
-    else:
-        print("Invalid choice, running basic examples as default.")
-        demo_enhanced_examples()
+    # Run demo_enhanced_examples() by default
+    print("\nRunning basic examples...")
+    demo_enhanced_examples()

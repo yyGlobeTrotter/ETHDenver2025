@@ -215,6 +215,43 @@ class MeanReversionIndicators:
         atr = np.mean(true_ranges[-window:])
         
         return atr
+    
+    @staticmethod
+    def calculate_atr(highs: List[float], lows: List[float], closes: List[float], window: int = 14) -> float:
+        """
+        Calculate Average True Range (ATR) from separate high, low, close arrays.
+        
+        Args:
+            highs: List of high prices
+            lows: List of low prices
+            closes: List of close prices
+            window: Window size for ATR calculation
+            
+        Returns:
+            ATR value
+        """
+        if len(highs) < window + 1 or len(lows) < window + 1 or len(closes) < window + 1:
+            raise ValueError(f"Not enough price data. Need at least {window + 1} data points.")
+        
+        true_ranges = []
+        
+        # Calculate true range for each candle
+        for i in range(1, len(closes)):
+            # True Range is the greatest of:
+            # 1. Current High - Current Low
+            # 2. |Current High - Previous Close|
+            # 3. |Current Low - Previous Close|
+            tr1 = highs[i] - lows[i]
+            tr2 = abs(highs[i] - closes[i-1])
+            tr3 = abs(lows[i] - closes[i-1])
+            
+            true_range = max(tr1, tr2, tr3)
+            true_ranges.append(true_range)
+        
+        # Calculate ATR as average of true ranges
+        atr = np.mean(true_ranges[-window:])
+        
+        return atr
         
     @staticmethod
     def calculate_macd(prices: Union[List[float], List[OHLCData]], 

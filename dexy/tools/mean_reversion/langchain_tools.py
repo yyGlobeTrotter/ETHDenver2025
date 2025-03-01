@@ -10,8 +10,8 @@ from datetime import datetime
 
 from langchain_core.tools import tool, ToolException
 
-from tools.mean_reversion.core.api import TokenPriceAPI
-from tools.mean_reversion.core.indicators import MeanReversionIndicators, MeanReversionService
+from core.api import TokenPriceAPI, OHLCData
+from core.indicators import MeanReversionIndicators, MeanReversionService
 
 # Parameter models for improved documentation and validation
 
@@ -380,4 +380,162 @@ Mean reversion strategies assume that prices tend to move back toward their mean
         return message
     except Exception as e:
         raise ToolException(f"Error analyzing token {token_id}: {str(e)}")
+
+
+@tool(response_format="content_and_artifact")
+def get_ohlc_data(token_id: str, period: str = "1DAY", limit: int = 30) -> Tuple[str, List[OHLCData]]:
+    """
+    Get OHLC (Open, High, Low, Close) candle data for a token.
+    
+    Args:
+        token_id: The ID of the token (e.g., 'bitcoin', 'ethereum')
+        period: Time period for each candle (e.g., '1DAY', '1HRS', '15MIN')
+        limit: Number of candles to fetch
+        
+    Returns:
+        Both a human-readable summary and the raw OHLC data for further processing.
+    """
+    api = TokenPriceAPI(api_provider="coinapi")
+    try:
+        ohlc_data = api.get_ohlc_data(token_id, period=period, limit=limit)
+        
+        # Create a human-readable summary message
+        first_timestamp = ohlc_data[0].timestamp
+        last_timestamp = ohlc_data[-1].timestamp
+        current_price = ohlc_data[-1].close
+        highest_price = max(candle.high for candle in ohlc_data)
+        lowest_price = min(candle.low for candle in ohlc_data)
+        
+        # Calculate price change percentage
+        price_change = ((ohlc_data[-1].close - ohlc_data[0].close) / ohlc_data[0].close) * 100
+        
+        message = f"""
+=== OHLC DATA FOR {token_id.upper()} ===
+Period: {period}
+
+Date Range: {first_timestamp.strftime('%Y-%m-%d')} to {last_timestamp.strftime('%Y-%m-%d')}
+Number of candles: {len(ohlc_data)}
+
+Current price: ${current_price:.2f}
+Highest price in period: ${highest_price:.2f}
+Lowest price in period: ${lowest_price:.2f}
+Price change: {price_change:.2f}%
+
+Most recent candle:
+- Date: {last_timestamp.strftime('%Y-%m-%d %H:%M')}
+- Open: ${ohlc_data[-1].open:.2f}
+- High: ${ohlc_data[-1].high:.2f}
+- Low: ${ohlc_data[-1].low:.2f}
+- Close: ${ohlc_data[-1].close:.2f}
+"""
+        return message, ohlc_data
+    except Exception as e:
+        raise ToolException(f"Error fetching OHLC data for {token_id}: {str(e)}")
+
+
+@tool(response_format="content_and_artifact")
+def get_ohlc_indicators(token_id: str, days: int = 30) -> Tuple[str, Dict[str, Any]]:
+    """
+    Calculate technical indicators based on OHLC data for advanced analysis.
+    
+    Args:
+        token_id: The ID of the token (e.g., 'bitcoin', 'ethereum')
+        days: Number of days of historical data to fetch
+        
+    Returns:
+        Both a human-readable analysis and the raw indicator data.
+    """
+    api = TokenPriceAPI(api_provider="coinapi")
+    service = MeanReversionService()
+    try:
+        # Get OHLC data
+        ohlc_data = api.get_ohlc_data(token_id, period="1DAY", limit=days)
+        
+        # Get basic mean reversion metrics
+        basic_metrics = service.get_all_metrics(token_id, days=days)
+        
+        # Calculate OHLC-specific indicators
+        # Extract prices for indicators
+        closes = [candle.close for candle in ohlc_data]
+        highs = [candle.high for candle in ohlc_data]
+        lows = [candle.low for candle in ohlc_data]
+        
+        indicators = MeanReversionIndicators()
+        
+        # Calculate Average True Range (ATR)
+        atr = indicators.calculate_atr(highs, lows, closes, window=14)
+        atr_pct = (atr / closes[-1]) * 100  # ATR as percentage of current price
+        
+        # Calculate MACD
+        macd_line, signal_line, histogram = indicators.calculate_macd(closes)
+        
+        # Determine if MACD is bullish or bearish
+        macd_signal = "BULLISH" if macd_line > signal_line else "BEARISH"
+        
+        # Create a comprehensive results object
+        results = {
+            "token_id": token_id,
+            "current_price": closes[-1],
+            "timestamp": ohlc_data[-1].timestamp.strftime('%Y-%m-%d %H:%M'),
+            "metrics": {
+                # Include the basic metrics
+                "z_score": basic_metrics["metrics"]["z_score"],
+                "rsi": basic_metrics["metrics"]["rsi"],
+                "bollinger_bands": basic_metrics["metrics"]["bollinger_bands"],
+                # Add OHLC-specific metrics
+                "ohlc_specific": {
+                    "atr": {
+                        "value": atr,
+                        "percentage": atr_pct,
+                        "interpretation": "HIGH VOLATILITY" if atr_pct > 5 else "MODERATE VOLATILITY" if atr_pct > 2 else "LOW VOLATILITY"
+                    },
+                    "macd": {
+                        "macd_line": macd_line,
+                        "signal_line": signal_line,
+                        "histogram": histogram,
+                        "signal": macd_signal
+                    }
+                }
+            }
+        }
+        
+        # Generate a human-readable message
+        z_score = results["metrics"]["z_score"]["value"]
+        z_signal = results["metrics"]["z_score"]["interpretation"]
+        rsi = results["metrics"]["rsi"]["value"]
+        rsi_signal = results["metrics"]["rsi"]["interpretation"]
+        percent_b = results["metrics"]["bollinger_bands"]["percent_b"]
+        bb_signal = results["metrics"]["bollinger_bands"]["interpretation"]
+        
+        message = f"""
+=== OHLC-BASED TECHNICAL ANALYSIS FOR {token_id.upper()} ===
+Time period: Last {days} days
+Current Price: ${results["current_price"]:.2f}
+
+MEAN REVERSION INDICATORS:
+- Z-Score: {z_score:.2f} ({z_signal})
+- RSI: {rsi:.2f} ({rsi_signal})
+- Bollinger %B: {percent_b:.2f} ({bb_signal})
+
+OHLC-SPECIFIC INDICATORS:
+- ATR: {atr:.2f} ({results["metrics"]["ohlc_specific"]["atr"]["interpretation"]})
+  Measures volatility; higher values indicate higher volatility.
+  Current ATR is {atr_pct:.2f}% of price.
+
+- MACD: {macd_signal}
+  MACD Line: {macd_line:.4f}
+  Signal Line: {signal_line:.4f}
+  Histogram: {histogram:.4f}
+  
+COMBINED ANALYSIS:
+The OHLC data provides a more detailed view of price action and volatility.
+- ATR shows the average price movement, useful for setting stop losses
+- MACD helps identify momentum shifts in addition to mean reversion signals
+
+This extended analysis combines price trend, momentum, and volatility metrics
+for a more comprehensive technical view of {token_id.upper()}.
+"""
+        return message, results
+    except Exception as e:
+        raise ToolException(f"Error calculating OHLC indicators for {token_id}: {str(e)}")
 
