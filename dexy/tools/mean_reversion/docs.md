@@ -4,14 +4,16 @@ This project provides tools for building, backtesting, and analyzing cryptocurre
 
 ## Features
 
-*   **Data Retrieval:** Fetches current/historical prices from CoinGecko.
-*   **Technical Indicators:** Z-score, RSI, Bollinger Bands, Moving Averages.
+*   **Data Retrieval:** Fetches current/historical prices from CoinGecko or DeFi Llama, and OHLC data from CoinAPI.
+*   **Technical Indicators:** Z-score, RSI, Bollinger Bands, Moving Averages, MACD, and ATR.
+*   **OHLC Support:** Full OHLC (Open, High, Low, Close) candle data for advanced technical analysis.
 *   **Trading Strategies:** Mean Reversion, Moving Average Crossover.
 *   **Backtesting:** Evaluates performance on historical data.
 *   **Optimization:** Finds optimal strategy parameters.
 *   **Visualization:** Plots backtest results.
 *   **LangChain Integration:**  Ready to use with LangChain agents and OpenAI function calling.
 *   **Artifact Return:**  Provides structured data artifacts for further processing.
+*   **Multiple API Providers:** Support for CoinGecko, DeFi Llama, and CoinAPI.
 
 ## Requirements
 
@@ -61,41 +63,39 @@ Use code with caution.
 Python
 ### Using Mean Reversion Metrics Directly
 
-The `mean_reversion_metrics.py` file provides a `MeanReversionMetrics` class with static methods for calculating key technical indicators used in mean reversion strategies:
+The `core/indicators.py` file provides a `MeanReversionIndicators` class with static methods for calculating key technical indicators used in mean reversion strategies:
 
 ```python
-from mean_reversion_metrics import MeanReversionMetrics
-import requests
-import json
+from core.indicators import MeanReversionIndicators
+from core.api import TokenPriceAPI
 
-# Fetch historical price data (example using CoinGecko API)
-def get_historical_prices(token_id, days=30):
-    url = f"https://api.coingecko.com/api/v3/coins/{token_id}/market_chart"
-    params = {
-        "vs_currency": "usd",
-        "days": days,
-        "interval": "daily"
-    }
-    response = requests.get(url, params=params)
-    data = json.loads(response.text)
-    prices = [price[1] for price in data["prices"]]
-    return prices
+# Initialize API client (can choose CoinGecko or DeFi Llama)
+api = TokenPriceAPI(api_provider="coingecko")  # or "defillama"
+
+# Fetch historical price data
+prices, dates = api.get_historical_prices("bitcoin", days=30)
+
+# Create indicator instance
+indicators = MeanReversionIndicators()
 
 # Calculate Z-score
-prices = get_historical_prices("bitcoin")
-z_score = MeanReversionMetrics.calculate_z_score(prices, window=14)
+z_score = indicators.calculate_z_score(prices, window=14)
 print(f"Bitcoin Z-score: {z_score:.2f}")
 
 # Calculate RSI
-rsi = MeanReversionMetrics.calculate_rsi(prices, window=14)
+rsi = indicators.calculate_rsi(prices, window=14)
 print(f"Bitcoin RSI: {rsi:.2f}")
 
 # Calculate Bollinger Bands
-bb_data = MeanReversionMetrics.calculate_bollinger_bands(prices, window=20, num_std=2.0)
+bb_data = indicators.calculate_bollinger_bands(prices, window=20, num_std=2.0)
 print(f"Middle Band: ${bb_data['middle_band']:.2f}")
 print(f"Upper Band: ${bb_data['upper_band']:.2f}")
 print(f"Lower Band: ${bb_data['lower_band']:.2f}")
 print(f"Percent B: {bb_data['percent_b']:.2f}")
+
+# Use DeFi Llama API instead
+api_dl = TokenPriceAPI(api_provider="defillama")
+prices_dl, dates_dl = api_dl.get_historical_prices("bitcoin", days=10)
 ```
 
 Available methods:
@@ -146,15 +146,21 @@ API Customization: Modify TokenPriceAPI for different data sources.
 # Available Tools
 Basic Price Tools
 
-get_token_price: Current price.
+get_token_price: Current price (supports CoinGecko or DeFi Llama).
 
-get_token_z_score: Z-score.
+get_token_z_score: Z-score (supports CoinGecko or DeFi Llama).
 
-get_token_rsi: RSI.
+get_token_rsi: RSI (supports CoinGecko or DeFi Llama).
 
-get_token_bollinger_bands: Bollinger Bands (with artifact).
+get_token_bollinger_bands: Bollinger Bands (with artifact, supports CoinGecko or DeFi Llama).
 
-mean_reversion_analyzer: Comprehensive mean reversion analysis.
+mean_reversion_analyzer: Comprehensive mean reversion analysis (supports CoinGecko or DeFi Llama).
+
+OHLC Tools
+
+get_ohlc_data: Fetch OHLC (Open, High, Low, Close) candle data from CoinAPI.
+
+get_ohlc_indicators: Calculate comprehensive technical indicators from OHLC data, including ATR and MACD.
 
 Advanced Strategy Tools
 
@@ -174,13 +180,19 @@ get_optimal_strategy_parameters: Finds optimal parameters.
 
 # Limitations
 
-Uses CoinGecko's public API (rate-limited).
+Uses public APIs (DeFi Llama, CoinGecko, and CoinAPI) which are rate-limited.
 
 Historical data doesn't guarantee future results.
 
 No real-time updates.
 
 Backtesting doesn't include slippage, fees, or liquidity.
+
+DeFi Llama historical price data requires one API call per day, which can be slower for long time periods.
+
+CoinAPI has strict rate limits (250 requests per day on the free plan), so use carefully.
+
+OHLC data is limited to certain token pairs available on CoinAPI.
 
 # Testing
 
