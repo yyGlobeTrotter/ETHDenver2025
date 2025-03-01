@@ -38,6 +38,7 @@ poetry.lock
 *.swp
 *.swo
 .DS_Store
+repomix-output.txt
 
 # Project specific
 wallet_data.txt

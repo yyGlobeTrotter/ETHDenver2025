@@ -18,7 +18,7 @@ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.messages.tool import ToolMessage
 
 # Import all tools from the consolidated structure
-from tools.langchain_tools import (
+from langchain_tools import (
     get_token_price,
     get_token_z_score,
     get_token_rsi,

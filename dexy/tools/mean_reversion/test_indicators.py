@@ -4,7 +4,7 @@ This script demonstrates the usage of enhanced LangChain tool features
 like error handling, content_and_artifact response format, and more.
 """
 
-from tools.langchain_tools import (
+from langchain_tools import (
     get_token_indicators,
     get_advanced_indicators,
     get_historical_indicators,

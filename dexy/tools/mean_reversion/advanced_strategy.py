@@ -56,7 +56,8 @@ class MeanReversionStrategy:
         timestamps = [price[0] for price in historical_data]
         prices = [price[1] for price in historical_data]
         dates = [
-            datetime.fromtimestamp(ts / 1000).strftime("%Y-%m-%d") for ts in timestamps
+            datetime.fromtimestamp(int(ts) / 1000).strftime("%Y-%m-%d")
+            for ts in timestamps
         ]
 
         # Create DataFrame
