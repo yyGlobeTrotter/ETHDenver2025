@@ -84,7 +84,7 @@ def initialize_agent():
     """Initialize the agent with CDP Agentkit."""
 
     # Initialize LLM: https://platform.openai.com/docs/models#gpt-4o
-    llm = ChatOpenAI(model="gpt-4o-mini")
+    llm = ChatOpenAI(model="gpt-4o-mini", api_key=os.environ.get("OPENAI_API_KEY"))
 
     # Initialize WalletProvider: https://docs.cdp.coinbase.com/agentkit/docs/wallet-management
     wallet_data = None
