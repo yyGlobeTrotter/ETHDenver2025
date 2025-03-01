@@ -10,8 +10,8 @@ from datetime import datetime
 
 from langchain_core.tools import tool, ToolException
 
-from core.api import TokenPriceAPI
-from core.indicators import MeanReversionIndicators, MeanReversionService
+from tools.mean_reversion.core.api import TokenPriceAPI
+from tools.mean_reversion.core.indicators import MeanReversionIndicators, MeanReversionService
 
 # Parameter models for improved documentation and validation
 

@@ -13,6 +13,13 @@ from langgraph.prebuilt import create_react_agent
 from langchain_community.agent_toolkits.load_tools import load_tools
 
 from tools.multiply import MultiplyTool
+from tools.mean_reversion import (
+    get_token_price,
+    get_token_z_score,
+    get_token_rsi,
+    get_token_bollinger_bands,
+    mean_reversion_analyzer,
+)
 
 
 from coinbase_agentkit import (
@@ -111,7 +118,14 @@ def initialize_agent():
     with open(wallet_data_file, "w") as f:
         f.write(wallet_data_json)
 
-    custom_tool = [MultiplyTool()]
+    custom_tool = [
+        MultiplyTool(),
+        get_token_price,
+        get_token_z_score,
+        get_token_rsi,
+        get_token_bollinger_bands,
+        mean_reversion_analyzer,
+    ]
 
     # Transform agentkit configuration into langchain tools
     tools = get_langchain_tools(agentkit) + custom_tool
