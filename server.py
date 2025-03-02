@@ -120,6 +120,15 @@ def wallet():
     else:
         return jsonify({"error": "No wallet data found"}), 404
 
+# Handler for Vercel serverless deployment
+def handler(request, context):
+    """
+    This function is used by Vercel to handle serverless requests.
+    It forwards the request to the Flask app.
+    """
+    with app.request_context(request):
+        return app.full_dispatch_request()
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5050))
     app.run(host="0.0.0.0", port=port)
