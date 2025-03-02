@@ -412,10 +412,17 @@
     </div>
 
     <!-- Sounds -->
+    <!-- Using data URIs for empty sounds to avoid 404 errors -->
+    <audio id="startup-sound" src="data:audio/mp3;base64," preload="auto"></audio>
+    <audio id="error-sound" src="data:audio/mp3;base64," preload="auto"></audio>
+    <audio id="click-sound" src="data:audio/mp3;base64," preload="auto"></audio>
+    <audio id="notify-sound" src="data:audio/mp3;base64," preload="auto"></audio>
+    <!-- Original paths (commented out):
     <audio id="startup-sound" src="static/sounds/windows-95-startup.mp3" preload="auto"></audio>
     <audio id="error-sound" src="static/sounds/windows-95-error.mp3" preload="auto"></audio>
     <audio id="click-sound" src="static/sounds/windows-95-click.mp3" preload="auto"></audio>
     <audio id="notify-sound" src="static/sounds/windows-95-notify.mp3" preload="auto"></audio>
+    -->
 
     <script src="static/js/win97.js"></script>
 </body>

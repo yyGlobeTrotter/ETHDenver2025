@@ -461,10 +461,15 @@ function playSound(soundId) {
     if (soundEnabled) {
         const sound = document.getElementById(soundId);
         if (sound) {
-            sound.currentTime = 0;
-            sound.play().catch(e => {
-                console.log('Error playing sound:', e);
-            });
+            // Check if the sound file actually exists/loaded properly
+            if (sound.readyState > 0) {
+                sound.currentTime = 0;
+                sound.play().catch(e => {
+                    console.log('Error playing sound:', e);
+                });
+            } else {
+                console.log('Sound file not loaded:', soundId);
+            }
         }
     }
 }

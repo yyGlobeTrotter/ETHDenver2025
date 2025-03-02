@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify, Response
+from flask_cors import CORS
 import os
 import json
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 @app.route('/', methods=['GET'])
 def home():
@@ -24,19 +26,34 @@ def status():
     """API endpoint to check server status"""
     return jsonify({"status": "AgentKit is running"}), 200
 
-@app.route('/query', methods=['POST'])
+@app.route('/query', methods=['POST', 'OPTIONS'])
 def query():
-    """Simplified query endpoint"""
+    """Query endpoint for chat functionality"""
+    if request.method == 'OPTIONS':
+        # Handle preflight request
+        response = jsonify({})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST')
+        return response
+
     data = request.json
     user_message = data.get("message", "")
     
     if not user_message:
         return jsonify({"error": "No message provided"}), 400
     
-    # Simplified response for testing deployment
-    return jsonify({
-        "response": f"Received message: {user_message}. This is a simplified API for testing deployment."
-    })
+    try:
+        # For now, provide a simple response
+        response = {
+            "response": "I understand you're asking about: " + user_message + "\nI'm currently in test mode, but I can help you analyze cryptocurrencies and interact with blockchain using CDP AgentKit. What would you like to know?"
+        }
+        return jsonify(response)
+    except Exception as e:
+        return jsonify({
+            "error": "Internal server error",
+            "message": str(e)
+        }), 500
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
