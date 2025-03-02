@@ -1,21 +1,9 @@
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# API keys and secrets
-*.pem
-*.key
-secrets.json
-config.json
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -27,17 +15,31 @@ lib64/
 parts/
 sdist/
 var/
+wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 
 # Virtual Environment
+.env
+.venv
+env/
 venv/
 ENV/
-env/
+env.bak/
+venv.bak/
 
-# IDE files
+# Poetry
+poetry.lock
+
+# IDE
 .idea/
 .vscode/
 *.swp
-*.swo 
+*.swo
+.DS_Store
+repomix-output.txt
+
+# Project specific
+wallet_data.txt
+.env.local 
