@@ -51,14 +51,20 @@ def analyze():
     token_id = data.get("token_id", "bitcoin")
     
     try:
-        # Use invoke instead of __call__
-        indicators = get_token_indicators_tool.invoke({"token_id": token_id})
-        if indicators:
-            return jsonify({"result": indicators})
-        else:
-            return jsonify({"error": "Could not retrieve indicators"}), 500
+        # Import the tools
+        from tools.mean_reversion import get_token_indicators
+        
+        # Use invoke instead of direct call
+        indicators = get_token_indicators.invoke({"token_id": token_id})
+        
+        if not indicators:
+            return jsonify({"error": "No indicators returned"}), 500
+            
+        return jsonify({"result": indicators})
+    except ImportError as e:
+        return jsonify({"error": "Failed to import required modules", "details": str(e)}), 500
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Failed to process request", "details": str(e)}), 500
 
 @app.route('/technical', methods=['POST'])
 def technical():
