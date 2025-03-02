@@ -324,14 +324,14 @@ body::after {
 /* Start Menu */
 .start-menu {
   position: fixed;
-  bottom: 30px;
-  left: 2px;
+  bottom: 28px;
+  left: 0;
   width: 200px;
-  background-color: var(--win97-gray);
+  background: var(--win97-gray);
   border: 2px solid;
   border-color: var(--win97-light) var(--win97-dark) var(--win97-dark) var(--win97-light);
   display: none;
-  z-index: 1001;
+  z-index: 1000;
 }
 
 .start-menu.active {
@@ -352,27 +352,60 @@ body::after {
 }
 
 .start-menu-item {
-  padding: 4px 5px;
   display: flex;
   align-items: center;
+  padding: 8px;
   cursor: pointer;
-  gap: 8px;
+  color: black;
+  text-decoration: none;
+  background: var(--win97-gray);
 }
 
 .start-menu-item:hover {
-  background-color: var(--win97-blue);
+  background: var(--win97-blue);
   color: white;
 }
 
 .start-menu-item img {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
+  margin-right: 8px;
+  background-color: var(--win97-gray);
+  border: 1px solid var(--win97-dark);
+  padding: 2px;
 }
 
-.start-menu-divider {
-  height: 1px;
-  background-color: var(--win97-darker);
-  margin: 4px 0;
+.start-menu-item:hover img {
+  background-color: var(--win97-blue);
+  border-color: var(--win97-light);
+}
+
+/* Icon Styles */
+.icon {
+  width: 32px;
+  height: 32px;
+  background-color: var(--win97-gray);
+  border: 1px solid var(--win97-dark);
+  padding: 2px;
+  margin-right: 8px;
+}
+
+.taskbar-entry-icon {
+  width: 16px;
+  height: 16px;
+  background-color: var(--win97-gray);
+  border: 1px solid var(--win97-dark);
+  padding: 1px;
+  margin-right: 4px;
+}
+
+.bot-avatar {
+  width: 32px;
+  height: 32px;
+  background-color: var(--win97-gray);
+  border: 1px solid var(--win97-dark);
+  padding: 2px;
+  margin-right: 8px;
 }
 
 /* Chat Window Specific Styles */
@@ -400,13 +433,6 @@ body::after {
 .message-content {
   display: flex;
   align-items: flex-start;
-}
-
-.bot-avatar {
-  width: 24px;
-  height: 24px;
-  margin-right: 8px;
-  flex-shrink: 0;
 }
 
 .message-text {
