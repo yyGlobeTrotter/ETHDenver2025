@@ -11,7 +11,10 @@ let windowSizes = {};
 let soundEnabled = true;
 
 // API Configuration
-const API_BASE_URL = window.location.origin;
+// Update API_BASE_URL to always use the deployed Vercel URL in production
+const API_BASE_URL = window.location.hostname.includes('vercel.app') 
+    ? 'https://' + window.location.hostname
+    : window.location.origin;
 let API_KEY = localStorage.getItem('api_key') || '';
 
 // Initialize when DOM is fully loaded
@@ -635,7 +638,7 @@ function runQuickAnalysis() {
     resultsContainer.appendChild(loadingContainer);
     
     // Make the API call to the analyze endpoint
-    fetch('/analyze', {
+    fetch(`${API_BASE_URL}/analyze`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -840,7 +843,7 @@ function runTechnicalAnalysis() {
     }
     
     // Make the API call to the technical endpoint
-    fetch('/technical', {
+    fetch(`${API_BASE_URL}/technical`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1003,7 +1006,7 @@ function runWhaleAnalysis() {
     resultsContainer.appendChild(loadingContainer);
     
     // Make the API call to the whale endpoint
-    fetch('/whale', {
+    fetch(`${API_BASE_URL}/whale`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1021,7 +1024,7 @@ function runWhaleAnalysis() {
         loadingContainer.style.display = 'none';
         
         // Get price data in a separate API call
-        fetch('/technical', {
+        fetch(`${API_BASE_URL}/technical`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1281,7 +1284,7 @@ function connectWallet() {
     walletAddress.textContent = 'Connecting...';
     
     // Get wallet data from API
-    fetch('/wallet')
+    fetch(`${API_BASE_URL}/wallet`)
     .then(response => {
         if (!response.ok) {
             throw new Error(response.status === 404 ? 'No wallet data found' : 'Error connecting to wallet');
