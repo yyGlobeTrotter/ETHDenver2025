@@ -2,6 +2,11 @@ from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import os
 import json
+import sys
+import traceback
+
+# Add parent directory to path so we can import from tools
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -72,42 +77,79 @@ def query():
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    """Simplified analysis endpoint"""
+    """Analysis endpoint"""
     data = request.json
     token_id = data.get("token_id", "bitcoin")
     
-    # Simplified response for testing deployment
-    return jsonify({
-        "result": f"Analysis for {token_id} would appear here in the full version."
-    })
+    try:
+        # Import the tools
+        from tools.mean_reversion import get_token_indicators
+        
+        # Get the indicators
+        indicators = get_token_indicators(token_id)
+        
+        if not indicators:
+            return jsonify({"error": "No indicators returned"}), 500
+            
+        return jsonify({"result": indicators})
+    except ImportError as e:
+        error_msg = f"Failed to import required modules: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+        return jsonify({"error": error_msg}), 500
+    except Exception as e:
+        error_msg = f"Failed to process request: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+        return jsonify({"error": error_msg}), 500
 
 @app.route('/technical', methods=['POST'])
 def technical():
-    """Simplified technical indicators endpoint"""
+    """API endpoint to get technical indicators"""
     data = request.json
     token_id = data.get("token_id", "bitcoin")
     
-    # Simplified response for testing deployment
-    return jsonify({
-        "indicators": {
-            "token": token_id,
-            "message": "Technical indicators would appear here in the full version."
-        }
-    })
+    try:
+        # Import the tools
+        from tools.mean_reversion import get_token_indicators
+        
+        # Get the indicators
+        indicators = get_token_indicators(token_id)
+        
+        return jsonify({"indicators": indicators})
+    except Exception as e:
+        error_msg = f"Error in technical endpoint: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+        return jsonify({"error": error_msg}), 500
 
 @app.route('/whale', methods=['POST'])
 def whale():
-    """Simplified whale activity endpoint"""
+    """API endpoint to get whale activity analysis"""
     data = request.json
     token_id = data.get("token_id", "bitcoin")
     
-    # Simplified response for testing deployment
-    return jsonify({
-        "token_id": token_id,
-        "risk_score": 65,
-        "level": "MEDIUM",
-        "signals": ["This is a simplified API for testing deployment"]
-    })
+    try:
+        # Import the tools
+        from tools.whalesignal import generate_risk_signals
+        
+        # Get risk signals
+        risk_data = generate_risk_signals()
+        
+        # Format response
+        response = {
+            "token_id": token_id,
+            "risk_score": risk_data["risk_score"],
+            "level": risk_data["level"],
+            "signals": risk_data["signals"]
+        }
+        
+        return jsonify(response)
+    except Exception as e:
+        error_msg = f"Error in whale endpoint: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+        return jsonify({"error": error_msg}), 500
 
 # Catch-all route to handle all paths and methods
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
@@ -160,6 +202,9 @@ def handler(event, context):
             }
         except Exception as e:
             # Handle any errors
+            error_msg = f"Handler error: {str(e)}"
+            print(error_msg)
+            traceback.print_exc()
             return {
                 'statusCode': 500,
                 'headers': {'Content-Type': 'application/json'},
