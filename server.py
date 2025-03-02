@@ -46,18 +46,17 @@ def query():
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    """API endpoint to perform quick analysis"""
+    """Analysis endpoint"""
     data = request.json
     token_id = data.get("token_id", "bitcoin")
     
     try:
-        # Import the integrated analysis tool
-        from tools.mean_reversion import integrated_crypto_analysis
-        
-        # Use the integrated analysis function
-        analysis_result = integrated_crypto_analysis(token_id)
-        
-        return jsonify({"result": analysis_result})
+        # Use invoke instead of __call__
+        indicators = get_token_indicators_tool.invoke({"token_id": token_id})
+        if indicators:
+            return jsonify({"result": indicators})
+        else:
+            return jsonify({"error": "Could not retrieve indicators"}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

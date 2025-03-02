@@ -462,18 +462,18 @@ function updateClock() {
 // Sound Functions
 
 function playSound(soundId) {
-    if (soundEnabled) {
-        const sound = document.getElementById(soundId);
-        if (sound) {
-            // Check if the sound file actually exists/loaded properly
-            if (sound.readyState > 0) {
-                sound.currentTime = 0;
-                sound.play().catch(e => {
-                    console.log('Error playing sound:', e);
-                });
-            } else {
-                console.log('Sound file not loaded:', soundId);
-            }
+    if (!soundEnabled) return;
+    
+    const sound = document.getElementById(soundId);
+    if (sound) {
+        // Only try to play if the sound file exists and is loaded
+        if (sound.readyState > 0) {
+            sound.currentTime = 0;
+            sound.play().catch(e => {
+                console.log('Sound playback failed:', e);
+                // Disable sounds if playback fails
+                soundEnabled = false;
+            });
         }
     }
 }
@@ -539,19 +539,24 @@ function addChatMessage(text, sender) {
     
     const avatar = document.createElement('img');
     avatar.className = 'bot-avatar';
-    avatar.src = sender === 'user' ? 'static/img/w2k_user.png' : 'static/img/w95_27.png';
+    // Set default avatars and add error handling
+    avatar.src = sender === 'user' ? 'static/img/w95_9.png' : 'static/img/w95_27.png';
     avatar.alt = sender === 'user' ? 'User' : 'Dexy';
+    avatar.onerror = function() {
+        // Fallback to a different icon if the avatar fails to load
+        this.src = 'static/img/w95_9.png';
+    };
     
     const messageText = document.createElement('div');
     messageText.className = 'message-text';
     
     // Process text for markdown-like formatting
     let formattedText = text
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
-        .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
-        .replace(/`(.*?)`/g, '<code>$1</code>') // Code
-        .replace(/\n\n/g, '</p><p>') // Paragraphs
-        .replace(/\n/g, '<br>'); // Line breaks
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`(.*?)`/g, '<code>$1</code>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
     
     messageText.innerHTML = `<p>${formattedText}</p>`;
     
