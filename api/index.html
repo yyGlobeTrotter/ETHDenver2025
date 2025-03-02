@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dexy - Crypto Analysis Chatbot</title>
+    <link rel="stylesheet" href="static/css/win97.css">
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="desktop">
+        <!-- Desktop Icons -->
+        <div class="desktop-icons">
+            <div class="desktop-icon" id="dexy-icon" onclick="openWindow('chat-window')">
+                <img src="static/img/w95_27.png" alt="Dexy">
+                <span>Dexy</span>
+            </div>
+            <div class="desktop-icon" id="analysis-icon" onclick="openWindow('analysis-window')">
+                <img src="static/img/w95_52.png" alt="Analysis">
+                <span>Analysis</span>
+            </div>
+            <div class="desktop-icon" id="settings-icon" onclick="openWindow('settings-window')">
+                <img src="static/img/w2k_control_panel.png" alt="Settings">
+                <span>Settings</span>
+            </div>
+            <div class="desktop-icon" id="help-icon" onclick="openWindow('help-window')">
+                <img src="static/img/w95_46.png" alt="Help">
+                <span>Help</span>
+            </div>
+        </div>
+
+        <!-- Windows -->
+        <!-- Chat Window -->
+        <div class="window" id="chat-window" style="display: none; width: 700px; height: 500px; top: 50px; left: 100px;">
+            <div class="title-bar">
+                <div class="title-bar-text">
+                    Dexy Chatbot
+                </div>
+                <div class="title-bar-controls">
+                    <button class="title-bar-button" onclick="minimizeWindow('chat-window')">_</button>
+                    <button class="title-bar-button" onclick="toggleMaximize('chat-window')">□</button>
+                    <button class="title-bar-button" onclick="closeWindow('chat-window')">✕</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="chat-message system">
+                            <div class="message-content">
+                                <img src="static/img/w95_27.png" class="bot-avatar">
+                                <div class="message-text">
+                                    <p>Welcome to Dexy! I can help you analyze cryptocurrencies and interact with blockchain using CDP AgentKit. Type a message to begin.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <textarea id="chat-input" placeholder="Type your message here..." rows="3"></textarea>
+                        <button class="send-button" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+            <div class="status-bar">
+                <div class="status-bar-field">Ready</div>
+                <div class="status-bar-field">Connected to CDP</div>
+            </div>
+        </div>
+
+        <!-- Analysis Window -->
+        <div class="window" id="analysis-window" style="display: none; width: 650px; height: 480px; top: 80px; left: 150px;">
+            <div class="title-bar">
+                <div class="title-bar-text">
+                    Cryptocurrency Analysis
+                </div>
+                <div class="title-bar-controls">
+                    <button class="title-bar-button" onclick="minimizeWindow('analysis-window')">_</button>
+                    <button class="title-bar-button" onclick="toggleMaximize('analysis-window')">□</button>
+                    <button class="title-bar-button" onclick="closeWindow('analysis-window')">✕</button>
+                </div>
+            </div>
+            <div class="window-content" style="padding: 0;">
+                <div class="tab-container">
+                    <div class="tabs">
+                        <button class="tab-button active" onclick="showTab('quick-analysis')">Quick Analysis</button>
+                        <button class="tab-button" onclick="showTab('technical-indicators')">Technical Indicators</button>
+                        <button class="tab-button" onclick="showTab('whale-analysis')">Whale Analysis</button>
+                    </div>
+                    <div class="tab-content">
+                        <div id="quick-analysis" class="tab-pane active">
+                            <div class="analysis-form">
+                                <div class="form-row">
+                                    <label for="quick-token">Select Cryptocurrency:</label>
+                                    <select id="quick-token" class="win97-select">
+                                        <option value="bitcoin">Bitcoin (BTC)</option>
+                                        <option value="ethereum">Ethereum (ETH)</option>
+                                        <option value="solana">Solana (SOL)</option>
+                                        <option value="cardano">Cardano (ADA)</option>
+                                        <option value="ripple">XRP</option>
+                                    </select>
+                                </div>
+                                <button class="win97-button" onclick="runQuickAnalysis()">Run Analysis</button>
+                            </div>
+                            <div class="analysis-results" id="quick-analysis-results">
+                                <div class="loading-container" id="quick-analysis-loading" style="display: none;">
+                                    <div class="win95-loading"></div>
+                                    <p>Analyzing cryptocurrency data...</p>
+                                </div>
+                                <div class="placeholder-message">
+                                    <p>Select a cryptocurrency and click "Run Analysis" to see results.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="technical-indicators" class="tab-pane">
+                            <div class="analysis-form">
+                                <div class="form-row">
+                                    <label for="technical-token">Cryptocurrency:</label>
+                                    <select id="technical-token" class="win97-select">
+                                        <option value="bitcoin">Bitcoin (BTC)</option>
+                                        <option value="ethereum">Ethereum (ETH)</option>
+                                        <option value="solana">Solana (SOL)</option>
+                                        <option value="cardano">Cardano (ADA)</option>
+                                        <option value="ripple">XRP</option>
+                                    </select>
+                                </div>
+                                <div class="form-row">
+                                    <label for="time-period">Time Period:</label>
+                                    <select id="time-period" class="win97-select">
+                                        <option value="7">7 Days</option>
+                                        <option value="14">14 Days</option>
+                                        <option value="30" selected>30 Days</option>
+                                        <option value="90">90 Days</option>
+                                    </select>
+                                </div>
+                                <div class="form-row checkbox-row">
+                                    <input type="checkbox" id="show-zscore" checked>
+                                    <label for="show-zscore">Z-Score</label>
+                                    
+                                    <input type="checkbox" id="show-rsi" checked>
+                                    <label for="show-rsi">RSI</label>
+                                    
+                                    <input type="checkbox" id="show-bb" checked>
+                                    <label for="show-bb">Bollinger Bands</label>
+                                </div>
+                                <button class="win97-button" onclick="runTechnicalAnalysis()">Calculate Indicators</button>
+                            </div>
+                            <div class="analysis-results" id="technical-analysis-results">
+                                <div class="loading-container" id="technical-analysis-loading" style="display: none;">
+                                    <div class="win95-loading"></div>
+                                    <p>Calculating technical indicators...</p>
+                                </div>
+                                <div class="placeholder-message">
+                                    <p>Configure your technical analysis parameters and click "Calculate Indicators".</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="whale-analysis" class="tab-pane">
+                            <div class="analysis-form">
+                                <div class="form-row">
+                                    <label for="whale-token">Select Cryptocurrency:</label>
+                                    <select id="whale-token" class="win97-select">
+                                        <option value="bitcoin">Bitcoin (BTC)</option>
+                                        <option value="ethereum">Ethereum (ETH)</option>
+                                        <option value="solana">Solana (SOL)</option>
+                                    </select>
+                                </div>
+                                <button class="win97-button" onclick="runWhaleAnalysis()">Analyze Whale Activity</button>
+                            </div>
+                            <div class="analysis-results" id="whale-analysis-results">
+                                <div class="loading-container" id="whale-analysis-loading" style="display: none;">
+                                    <div class="win95-loading"></div>
+                                    <p>Analyzing whale activity patterns...</p>
+                                </div>
+                                <div class="placeholder-message">
+                                    <p>Select a cryptocurrency and click "Analyze Whale Activity" to see whale dominance metrics.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="status-bar">
+                <div class="status-bar-field">Ready</div>
+            </div>
+        </div>
+
+        <!-- Settings Window -->
+        <div class="window" id="settings-window" style="display: none; width: 450px; height: 350px; top: 100px; left: 200px;">
+            <div class="title-bar">
+                <div class="title-bar-text">
+                    Settings
+                </div>
+                <div class="title-bar-controls">
+                    <button class="title-bar-button" onclick="minimizeWindow('settings-window')">_</button>
+                    <button class="title-bar-button" onclick="toggleMaximize('settings-window')">□</button>
+                    <button class="title-bar-button" onclick="closeWindow('settings-window')">✕</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="settings-container">
+                    <div class="settings-group">
+                        <h3>API Configuration</h3>
+                        <div class="settings-item">
+                            <label for="api-key">API Key:</label>
+                            <input type="password" id="api-key" placeholder="Enter your API key">
+                        </div>
+                        <div class="settings-item">
+                            <label for="api-provider">Default API Provider:</label>
+                            <select id="api-provider" class="win97-select">
+                                <option value="defillama">DeFi Llama</option>
+                                <option value="coingecko">CoinGecko</option>
+                                <option value="coinapi">CoinAPI</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="settings-group">
+                        <h3>UI Settings</h3>
+                        <div class="settings-item checkbox-setting">
+                            <input type="checkbox" id="enable-sounds" checked>
+                            <label for="enable-sounds">Enable Sound Effects</label>
+                        </div>
+                        <div class="settings-item checkbox-setting">
+                            <input type="checkbox" id="autostart-chat">
+                            <label for="autostart-chat">Open Chat on Startup</label>
+                        </div>
+                    </div>
+                    <div class="settings-group">
+                        <h3>CDP Wallet</h3>
+                        <div class="settings-item wallet-display">
+                            <div id="wallet-address">Not connected</div>
+                            <button class="win97-button small-button" onclick="connectWallet()">Connect</button>
+                        </div>
+                    </div>
+                    <div class="settings-buttons">
+                        <button class="win97-button" onclick="saveSettings()">Save</button>
+                        <button class="win97-button" onclick="closeWindow('settings-window')">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Window -->
+        <div class="window" id="help-window" style="display: none; width: 500px; height: 400px; top: 120px; left: 250px;">
+            <div class="title-bar">
+                <div class="title-bar-text">
+                    Help
+                </div>
+                <div class="title-bar-controls">
+                    <button class="title-bar-button" onclick="minimizeWindow('help-window')">_</button>
+                    <button class="title-bar-button" onclick="toggleMaximize('help-window')">□</button>
+                    <button class="title-bar-button" onclick="closeWindow('help-window')">✕</button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="help-tabs">
+                    <div class="help-sidebar">
+                        <div class="help-sidebar-item active" onclick="showHelpTab('getting-started')">Getting Started</div>
+                        <div class="help-sidebar-item" onclick="showHelpTab('commands')">Available Commands</div>
+                        <div class="help-sidebar-item" onclick="showHelpTab('tools')">Analysis Tools</div>
+                        <div class="help-sidebar-item" onclick="showHelpTab('blockchain')">Blockchain Features</div>
+                        <div class="help-sidebar-item" onclick="showHelpTab('about')">About Dexy</div>
+                    </div>
+                    <div class="help-content">
+                        <div id="getting-started" class="help-tab-content active">
+                            <h2>Getting Started with Dexy</h2>
+                            <p>Dexy is an AI-powered chatbot for cryptocurrency analysis and blockchain interaction. Here's how to get started:</p>
+                            <ol>
+                                <li>Double-click the <strong>Dexy</strong> icon on the desktop to open the chat window.</li>
+                                <li>Type a question about cryptocurrencies or blockchain in the chat input.</li>
+                                <li>Use the Analysis window to run predefined cryptocurrency analysis.</li>
+                            </ol>
+                            <p>Example questions you can ask Dexy:</p>
+                            <ul>
+                                <li>"What's the current price of Bitcoin?"</li>
+                                <li>"Is Ethereum showing mean reversion signals?"</li>
+                                <li>"Analyze whale activity for Solana"</li>
+                                <li>"What's in my CDP wallet?"</li>
+                            </ul>
+                        </div>
+                        <div id="commands" class="help-tab-content">
+                            <h2>Available Commands</h2>
+                            <p>Dexy understands natural language, so you can simply ask questions. Here are some specific command formats that work well:</p>
+                            <div class="command-list">
+                                <div class="command-item">
+                                    <div class="command-name">Price Check</div>
+                                    <div class="command-syntax">What's the price of [cryptocurrency]?</div>
+                                </div>
+                                <div class="command-item">
+                                    <div class="command-name">Full Analysis</div>
+                                    <div class="command-syntax">Run integrated analysis for [cryptocurrency]</div>
+                                </div>
+                                <div class="command-item">
+                                    <div class="command-name">Technical Indicator</div>
+                                    <div class="command-syntax">What's the [indicator] for [cryptocurrency]?</div>
+                                </div>
+                                <div class="command-item">
+                                    <div class="command-name">Wallet Check</div>
+                                    <div class="command-syntax">Show my wallet details</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="tools" class="help-tab-content">
+                            <h2>Analysis Tools</h2>
+                            <p>Dexy provides several analysis tools:</p>
+                            <div class="tool-list">
+                                <div class="tool-item">
+                                    <div class="tool-name">Mean Reversion Analysis</div>
+                                    <div class="tool-desc">Identifies potential price reversals using Z-Score, RSI, and Bollinger Bands</div>
+                                </div>
+                                <div class="tool-item">
+                                    <div class="tool-name">Whale Activity Monitoring</div>
+                                    <div class="tool-desc">Tracks large holders' activities and exchange flows</div>
+                                </div>
+                                <div class="tool-item">
+                                    <div class="tool-name">Integrated Analysis</div>
+                                    <div class="tool-desc">Combines technical indicators with whale dominance metrics</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="blockchain" class="help-tab-content">
+                            <h2>Blockchain Features</h2>
+                            <p>Dexy can interact with blockchain networks through CDP AgentKit:</p>
+                            <ul>
+                                <li><strong>Wallet Management:</strong> Create and manage CDP wallets</li>
+                                <li><strong>Network Support:</strong> Works with Base, Sepolia, and other EVM networks</li>
+                                <li><strong>Token Transfers:</strong> Send and receive tokens</li>
+                                <li><strong>Balance Checking:</strong> View token balances and transactions</li>
+                            </ul>
+                            <p>To use blockchain features, you need to connect a CDP wallet in the Settings window.</p>
+                        </div>
+                        <div id="about" class="help-tab-content">
+                            <h2>About Dexy</h2>
+                            <p>Dexy is a cryptocurrency analysis chatbot built for ETHDenver 2025.</p>
+                            <p>Version: 1.0.0</p>
+                            <p>Built with:</p>
+                            <ul>
+                                <li>AgentKit by Coinbase</li>
+                                <li>LangChain for AI capabilities</li>
+                                <li>Mean Reversion analysis tools</li>
+                                <li>Whale Signal analysis</li>
+                            </ul>
+                            <div class="about-logo">
+                                <img src="static/img/w95_27.png" alt="Dexy Logo">
+                                <p>© 2025 Dexy Team</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Taskbar -->
+        <div class="taskbar">
+            <button class="start-button" id="start-button">
+                <img src="static/img/w95_start.png" alt="Start" class="start-icon">
+                Start
+            </button>
+            <div class="taskbar-entries" id="taskbar-entries">
+                <!-- Taskbar entries will be added here dynamically -->
+            </div>
+            <div class="taskbar-time" id="taskbar-time">
+                12:00 PM
+            </div>
+        </div>
+
+        <!-- Start Menu -->
+        <div class="start-menu" id="start-menu">
+            <div class="start-menu-header">
+                <span>Dexy</span>
+            </div>
+            <div class="start-menu-items">
+                <div class="start-menu-item" onclick="openWindow('chat-window')">
+                    <img src="static/img/w95_27.png" alt="Dexy Chat">
+                    <span>Dexy Chat</span>
+                </div>
+                <div class="start-menu-item" onclick="openWindow('analysis-window')">
+                    <img src="static/img/w95_52.png" alt="Analysis">
+                    <span>Analysis Tools</span>
+                </div>
+                <div class="start-menu-item" onclick="openWindow('settings-window')">
+                    <img src="static/img/w2k_control_panel.png" alt="Settings">
+                    <span>Settings</span>
+                </div>
+                <div class="start-menu-divider"></div>
+                <div class="start-menu-item" onclick="openWindow('help-window')">
+                    <img src="static/img/w95_46.png" alt="Help">
+                    <span>Help</span>
+                </div>
+                <div class="start-menu-item" id="shutdown-button">
+                    <img src="static/img/w2k_shutdown.png" alt="Shutdown">
+                    <span>Shut Down</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Dialog -->
+    <div class="dialog-overlay" id="error-dialog-overlay" style="display: none;">
+        <div class="dialog" id="error-dialog">
+            <div class="dialog-title-bar">
+                <div class="dialog-title">Error</div>
+                <button class="dialog-close" onclick="closeErrorDialog()">✕</button>
+            </div>
+            <div class="dialog-content">
+                <img src="static/img/w98_msg_error.png" alt="Error" class="dialog-icon">
+                <div class="dialog-message" id="error-message">An error has occurred.</div>
+            </div>
+            <div class="dialog-buttons">
+                <button class="win97-button" onclick="closeErrorDialog()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sounds -->
+    <audio id="startup-sound" src="static/sounds/windows-95-startup.mp3" preload="auto"></audio>
+    <audio id="error-sound" src="static/sounds/windows-95-error.mp3" preload="auto"></audio>
+    <audio id="click-sound" src="static/sounds/windows-95-click.mp3" preload="auto"></audio>
+    <audio id="notify-sound" src="static/sounds/windows-95-notify.mp3" preload="auto"></audio>
+
+    <script src="static/js/win97.js"></script>
+</body>
+</html>

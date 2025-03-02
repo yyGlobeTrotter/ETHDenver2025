@@ -1,23 +1,57 @@
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response, send_from_directory
 import os
 import json
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../static', template_folder='..')
 
 @app.route('/', methods=['GET'])
 def home():
-    """Simple home endpoint"""
-    return jsonify({
-        "status": "online",
-        "message": "VinRouge Dexy Bot API is running",
-        "endpoints": [
-            "/status",
-            "/query",
-            "/analyze",
-            "/technical",
-            "/whale"
-        ]
-    })
+    """Serve the main UI page"""
+    try:
+        # First try to serve from the api directory (for Vercel)
+        index_path = os.path.join(os.path.dirname(__file__), 'index.html')
+        if not os.path.exists(index_path):
+            # Fallback to parent directory (for local development)
+            index_path = os.path.join(os.path.dirname(__file__), '..', 'index.html')
+        
+        if os.path.exists(index_path):
+            with open(index_path, 'r') as f:
+                content = f.read()
+            return Response(content, mimetype='text/html')
+        else:
+            raise FileNotFoundError(f"index.html not found at {index_path}")
+    except Exception as e:
+        # Fallback to API info if UI can't be served
+        return jsonify({
+            "status": "online",
+            "message": "VinRouge Dexy Bot API is running",
+            "endpoints": [
+                "/status",
+                "/query",
+                "/analyze",
+                "/technical",
+                "/whale"
+            ],
+            "note": "UI not available in this deployment. Error: " + str(e)
+        })
+
+@app.route('/static/<path:path>')
+def serve_static(path):
+    """Serve static files"""
+    try:
+        # First try to serve from the api/static directory (for Vercel)
+        static_dir = os.path.join(os.path.dirname(__file__), 'static')
+        if os.path.exists(os.path.join(static_dir, path)):
+            return send_from_directory(static_dir, path)
+        
+        # Fallback to parent static directory (for local development)
+        parent_static_dir = os.path.join(os.path.dirname(__file__), '..', 'static')
+        if os.path.exists(os.path.join(parent_static_dir, path)):
+            return send_from_directory(parent_static_dir, path)
+        
+        return jsonify({"error": f"Static file not found: {path}"}), 404
+    except Exception as e:
+        return jsonify({"error": f"Error serving static file: {path}", "details": str(e)}), 500
 
 @app.route('/status', methods=['GET'])
 def status():
