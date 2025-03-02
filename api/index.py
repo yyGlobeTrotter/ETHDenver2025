@@ -6,6 +6,9 @@ import json
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
+# Global variable to track CDP connection status
+cdp_connected = False
+
 @app.route('/', methods=['GET'])
 def home():
     """API home endpoint"""
@@ -24,7 +27,19 @@ def home():
 @app.route('/status', methods=['GET'])
 def status():
     """API endpoint to check server status"""
-    return jsonify({"status": "AgentKit is running"}), 200
+    try:
+        # In the full version, this would actually check CDP connection
+        # For now, we'll return a more accurate status
+        return jsonify({
+            "status": "API is running, but CDP connection is not available in test mode",
+            "cdp_connected": False
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+            "cdp_connected": False
+        }), 500
 
 @app.route('/query', methods=['POST', 'OPTIONS'])
 def query():

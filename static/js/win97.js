@@ -10,6 +10,10 @@ let windowPositions = {};
 let windowSizes = {};
 let soundEnabled = true;
 
+// API Configuration
+const API_BASE_URL = window.location.origin;
+let API_KEY = localStorage.getItem('api_key') || '';
+
 // Initialize when DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Load window elements
@@ -476,61 +480,52 @@ function playSound(soundId) {
 
 // Chat Functions
 
-function sendMessage() {
-    const chatInput = document.getElementById('chat-input');
-    const message = chatInput.value.trim();
+async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
     
-    if (message === '') return;
+    if (!message) return;
     
-    // Play notification sound
-    playSound('click-sound');
+    // Clear input
+    input.value = '';
     
     // Add user message to chat
     addChatMessage(message, 'user');
     
-    // Clear input
-    chatInput.value = '';
-    
-    // Show "Dexy is thinking..." message
+    // Add thinking message
     addThinkingMessage();
     
-    // Send the message to the API
-    fetch('/query', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: message }),
-    })
-    .then(response => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/query`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': API_KEY ? `Bearer ${API_KEY}` : undefined
+            },
+            body: JSON.stringify({ message })
+        });
+        
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return response.json();
-    })
-    .then(data => {
+        
+        const data = await response.json();
+        
         // Remove thinking message
         removeThinkingMessage();
         
-        // Add bot response
+        // Add bot response to chat
         addChatMessage(data.response, 'bot');
         
-        // Play notification sound
-        playSound('notify-sound');
-    })
-    .catch(error => {
+        // Update status bar
+        document.getElementById('status-text').textContent = 'Ready';
+        
+    } catch (error) {
         console.error('Error:', error);
-        
-        // Remove thinking message
         removeThinkingMessage();
-        
-        // Show error message
-        const errorMsg = "I'm having trouble connecting right now. Please try again later.";
-        addChatMessage(errorMsg, 'bot');
-        
-        // Play error sound
-        playSound('error-sound');
-    });
+        addChatMessage("I'm having trouble connecting right now. Please try again later.", 'error');
+        document.getElementById('status-text').textContent = 'Error: Connection failed';
+    }
 }
 
 function addChatMessage(text, sender) {
@@ -1360,3 +1355,29 @@ function showNotification(message) {
         }, 300);
     }, 3000);
 }
+
+// Update CDP connection status
+function updateCDPStatus() {
+    const statusElement = document.getElementById('cdp-status');
+    if (!statusElement) return;
+    
+    fetch(`${API_BASE_URL}/status`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "AgentKit is running") {
+                statusElement.textContent = 'Connected to CDP';
+                document.getElementById('status-text').textContent = 'Connected to CDP';
+            } else {
+                throw new Error('CDP not connected');
+            }
+        })
+        .catch(error => {
+            statusElement.textContent = 'CDP Connection Failed';
+            document.getElementById('status-text').textContent = 'Not connected to CDP';
+        });
+}
+
+// Call updateCDPStatus every 30 seconds
+setInterval(updateCDPStatus, 30000);
+// Initial CDP status check
+updateCDPStatus();
