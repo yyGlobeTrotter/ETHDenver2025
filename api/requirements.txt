@@ -3,7 +3,4 @@ flask-cors==4.0.0
 python-dotenv==1.0.0
 requests==2.31.0
 pandas-lite==0.0.5
-numpy==1.24.3
-langchain-openai==0.2.4
-langchain-core==0.3.40
-langchain-community==0.3.18 
+numpy==1.24.3 
