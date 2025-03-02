@@ -1,5 +1,6 @@
 # **📈 AI-Enabled & Risk-Signal-Driven Crypto DEX Trading Bot**
-![Logo](dexy/visual/VinRouge_DexyBot_Logo.png)
+![Logo](dexy/visual/VinRouge_DexyBot_Logo_small.png)
+
 🚀 **By Team VinRouge**  
 💡 **Blending On-Chain & Off-Chain Intelligence for Next-Gen Crypto Trading and Risk Management**  
 
