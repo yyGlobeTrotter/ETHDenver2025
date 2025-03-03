@@ -15,6 +15,14 @@ except Exception as e:
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
+# Configure logging
+import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger('dexy_api')
+
 # Global variable to track CDP connection status
 cdp_connected = False
 
@@ -84,7 +92,7 @@ def query():
 
 @app.route('/analyze', methods=['POST', 'OPTIONS'])
 def analyze():
-    """Analysis endpoint that combines technical and whale analysis"""
+    """Analysis endpoint that combines technical and whale analysis (logs errors)"""
     if request.method == 'OPTIONS':
         # Handle preflight request
         response = jsonify({})
@@ -99,6 +107,7 @@ def analyze():
             data = {}
             
         token_id = data.get("token_id", "bitcoin")
+        logger.info(f"Processing analyze request for token: {token_id}")
         
         # Try to combine both analysis types into one comprehensive report
         technical_data = None
@@ -111,7 +120,7 @@ def analyze():
                 import numpy as np
                 import pandas as pd
             except ImportError as e:
-                print(f"Error importing numpy or pandas: {e}")
+                logger.error(f"Error importing numpy or pandas: {e}")
                 raise ValueError(f"Required dependencies missing: {e}")
                 
             # Now try to import the mean reversion service
@@ -191,8 +200,9 @@ def analyze():
         
         return jsonify({"result": result})
     except Exception as e:
-        print(f"Error in analyze endpoint: {str(e)}")
-        return jsonify({"result": {"error": "Analysis failed", "message": "Please try again later"}})
+        error_msg = f"Error in analyze endpoint: {str(e)}"
+        logger.error(error_msg)
+        return jsonify({"result": {"error": "Analysis failed", "message": "Please try again later", "details": error_msg}})
 
 @app.route('/technical', methods=['POST', 'OPTIONS'])
 def technical():
@@ -212,6 +222,7 @@ def technical():
             
         token_id = data.get("token_id", "bitcoin")
         days = int(data.get("days", 30))
+        logger.info(f"Processing technical request for token: {token_id}, days: {days}")
         
         # Import the Mean Reversion Service here
         try:
@@ -220,7 +231,7 @@ def technical():
                 import numpy as np
                 import pandas as pd
             except ImportError as e:
-                print(f"Error importing numpy or pandas: {e}")
+                logger.error(f"Error importing numpy or pandas: {e}")
                 raise ValueError(f"Required dependencies missing: {e}")
                 
             # Now try to import the mean reversion service
@@ -283,8 +294,9 @@ def technical():
             return jsonify({"indicators": mock_data})
             
     except Exception as e:
-        print(f"Error in technical endpoint: {str(e)}")
-        return jsonify({"indicators": {"error": "Technical analysis failed", "message": "Please try again later"}})
+        error_msg = f"Error in technical endpoint: {str(e)}"
+        logger.error(error_msg)
+        return jsonify({"indicators": {"error": "Technical analysis failed", "message": "Please try again later", "details": error_msg}})
 
 @app.route('/whale', methods=['POST', 'OPTIONS'])
 def whale():
@@ -339,13 +351,15 @@ def whale():
             return jsonify(mock_data)
             
     except Exception as e:
-        print(f"Error in whale endpoint: {str(e)}")
+        error_msg = f"Error in whale endpoint: {str(e)}"
+        logger.error(error_msg)
         return jsonify({
             "token_id": token_id if 'token_id' in locals() else "unknown",
             "risk_score": 0,
             "level": "ERROR",
             "signals": ["Could not analyze whale activity at this time"],
-            "error": "Please try again later"
+            "error": "Please try again later",
+            "details": error_msg
         })
 
 # Add an endpoint for wallet
