@@ -364,33 +364,23 @@
         </div>
 
         <!-- Start Menu -->
-        <div class="start-menu" id="start-menu">
-            <div class="start-menu-header">
-                <span>Dexy</span>
-            </div>
-            <div class="start-menu-items">
-                <div class="start-menu-item" onclick="openWindow('chat-window')">
-                    <img src="static/img/w95_27.png" alt="Dexy Chat">
-                    <span>Dexy Chat</span>
-                </div>
-                <div class="start-menu-item" onclick="openWindow('analysis-window')">
-                    <img src="static/img/w95_52.png" alt="Analysis">
-                    <span>Analysis Tools</span>
-                </div>
-                <div class="start-menu-item" onclick="openWindow('settings-window')">
-                    <img src="static/img/w2k_control_panel.png" alt="Settings">
-                    <span>Settings</span>
-                </div>
-                <div class="start-menu-divider"></div>
-                <div class="start-menu-item" onclick="openWindow('help-window')">
-                    <img src="static/img/w95_46.png" alt="Help">
-                    <span>Help</span>
-                </div>
-                <div class="start-menu-item" id="shutdown-button">
-                    <img src="static/img/w2k_shutdown.png" alt="Shutdown">
-                    <span>Shut Down</span>
-                </div>
-            </div>
+        <div id="start-menu" class="start-menu">
+            <a href="#" class="start-menu-item" onclick="openWindow('chat-window')">
+                <img src="static/img/w95_27.png" alt="Dexy" class="icon">
+                Dexy
+            </a>
+            <a href="#" class="start-menu-item" onclick="openWindow('analysis-window')">
+                <img src="static/img/w95_52.png" alt="Analysis" class="icon">
+                Analysis
+            </a>
+            <a href="#" class="start-menu-item" onclick="openWindow('settings-window')">
+                <img src="static/img/w2k_control_panel.png" alt="Settings" class="icon">
+                Settings
+            </a>
+            <a href="#" class="start-menu-item" onclick="openWindow('help-window')">
+                <img src="static/img/w95_46.png" alt="Help" class="icon">
+                Help
+            </a>
         </div>
     </div>
 
@@ -412,10 +402,17 @@
     </div>
 
     <!-- Sounds -->
+    <!-- Using data URIs for empty sounds to avoid 404 errors -->
+    <audio id="startup-sound" src="data:audio/mp3;base64," preload="auto"></audio>
+    <audio id="error-sound" src="data:audio/mp3;base64," preload="auto"></audio>
+    <audio id="click-sound" src="data:audio/mp3;base64," preload="auto"></audio>
+    <audio id="notify-sound" src="data:audio/mp3;base64," preload="auto"></audio>
+    <!-- Original paths (commented out):
     <audio id="startup-sound" src="static/sounds/windows-95-startup.mp3" preload="auto"></audio>
     <audio id="error-sound" src="static/sounds/windows-95-error.mp3" preload="auto"></audio>
     <audio id="click-sound" src="static/sounds/windows-95-click.mp3" preload="auto"></audio>
     <audio id="notify-sound" src="static/sounds/windows-95-notify.mp3" preload="auto"></audio>
+    -->
 
     <script src="static/js/win97.js"></script>
 </body>
