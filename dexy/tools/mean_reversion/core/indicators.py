@@ -311,14 +311,14 @@ class MeanReversionService:
     Supports both regular price data and OHLC (Open, High, Low, Close) data.
     """
     
-    def __init__(self, api_key: Optional[str] = None, custom_api_url: Optional[str] = None, api_provider: str = "coinapi"):
+    def __init__(self, api_key: Optional[str] = None, custom_api_url: Optional[str] = None, api_provider: str = "defillama"):
         """
         Initialize the service with optional API credentials.
         
         Args:
             api_key: Optional API key for price data provider
             custom_api_url: Optional custom URL for price data provider
-            api_provider: The API provider to use (defaults to coinapi for OHLC data)
+            api_provider: The API provider to use (defillama, coingecko, or coinapi)
         """
         self.api = TokenPriceAPI(api_key=api_key, base_url=custom_api_url, api_provider=api_provider)
         self.indicators = MeanReversionIndicators()

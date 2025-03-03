@@ -10,10 +10,6 @@ let windowPositions = {};
 let windowSizes = {};
 let soundEnabled = true;
 
-// API Configuration
-const API_BASE_URL = window.location.origin;
-let API_KEY = localStorage.getItem('api_key') || '';
-
 // Initialize when DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Load window elements
@@ -462,17 +458,12 @@ function updateClock() {
 // Sound Functions
 
 function playSound(soundId) {
-    if (!soundEnabled) return;
-    
-    const sound = document.getElementById(soundId);
-    if (sound) {
-        // Only try to play if the sound file exists and is loaded
-        if (sound.readyState > 0) {
+    if (soundEnabled) {
+        const sound = document.getElementById(soundId);
+        if (sound) {
             sound.currentTime = 0;
             sound.play().catch(e => {
-                console.log('Sound playback failed:', e);
-                // Disable sounds if playback fails
-                soundEnabled = false;
+                console.log('Error playing sound:', e);
             });
         }
     }
@@ -480,52 +471,61 @@ function playSound(soundId) {
 
 // Chat Functions
 
-async function sendMessage() {
-    const input = document.getElementById('chat-input');
-    const message = input.value.trim();
+function sendMessage() {
+    const chatInput = document.getElementById('chat-input');
+    const message = chatInput.value.trim();
     
-    if (!message) return;
+    if (message === '') return;
     
-    // Clear input
-    input.value = '';
+    // Play notification sound
+    playSound('click-sound');
     
     // Add user message to chat
     addChatMessage(message, 'user');
     
-    // Add thinking message
+    // Clear input
+    chatInput.value = '';
+    
+    // Show "Dexy is thinking..." message
     addThinkingMessage();
     
-    try {
-        const response = await fetch(`${API_BASE_URL}/query`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': API_KEY ? `Bearer ${API_KEY}` : undefined
-            },
-            body: JSON.stringify({ message })
-        });
-        
+    // Send the message to the API
+    fetch('/query', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: message }),
+    })
+    .then(response => {
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error('Network response was not ok');
         }
+        return response.json();
+    })
+    .then(data => {
+        // Remove thinking message
+        removeThinkingMessage();
         
-        const data = await response.json();
+        // Add bot response
+        addChatMessage(data.response, 'bot');
+        
+        // Play notification sound
+        playSound('notify-sound');
+    })
+    .catch(error => {
+        console.error('Error:', error);
         
         // Remove thinking message
         removeThinkingMessage();
         
-        // Add bot response to chat
-        addChatMessage(data.response, 'bot');
+        // Show error message
+        const errorMsg = "I'm having trouble connecting right now. Please try again later.";
+        addChatMessage(errorMsg, 'bot');
         
-        // Update status bar
-        document.getElementById('status-text').textContent = 'Ready';
-        
-    } catch (error) {
-        console.error('Error:', error);
-        removeThinkingMessage();
-        addChatMessage("I'm having trouble connecting right now. Please try again later.", 'error');
-        document.getElementById('status-text').textContent = 'Error: Connection failed';
-    }
+        // Play error sound
+        playSound('error-sound');
+    });
 }
 
 function addChatMessage(text, sender) {
@@ -539,24 +539,19 @@ function addChatMessage(text, sender) {
     
     const avatar = document.createElement('img');
     avatar.className = 'bot-avatar';
-    // Set default avatars and add error handling
-    avatar.src = sender === 'user' ? 'static/img/w95_9.png' : 'static/img/w95_27.png';
+    avatar.src = sender === 'user' ? 'static/img/w2k_user.png' : 'static/img/w95_27.png';
     avatar.alt = sender === 'user' ? 'User' : 'Dexy';
-    avatar.onerror = function() {
-        // Fallback to a different icon if the avatar fails to load
-        this.src = 'static/img/w95_9.png';
-    };
     
     const messageText = document.createElement('div');
     messageText.className = 'message-text';
     
     // Process text for markdown-like formatting
     let formattedText = text
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/`(.*?)`/g, '<code>$1</code>')
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br>');
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+        .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+        .replace(/`(.*?)`/g, '<code>$1</code>') // Code
+        .replace(/\n\n/g, '</p><p>') // Paragraphs
+        .replace(/\n/g, '<br>'); // Line breaks
     
     messageText.innerHTML = `<p>${formattedText}</p>`;
     
@@ -1360,29 +1355,3 @@ function showNotification(message) {
         }, 300);
     }, 3000);
 }
-
-// Update CDP connection status
-function updateCDPStatus() {
-    const statusElement = document.getElementById('cdp-status');
-    if (!statusElement) return;
-    
-    fetch(`${API_BASE_URL}/status`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === "AgentKit is running") {
-                statusElement.textContent = 'Connected to CDP';
-                document.getElementById('status-text').textContent = 'Connected to CDP';
-            } else {
-                throw new Error('CDP not connected');
-            }
-        })
-        .catch(error => {
-            statusElement.textContent = 'CDP Connection Failed';
-            document.getElementById('status-text').textContent = 'Not connected to CDP';
-        });
-}
-
-// Call updateCDPStatus every 30 seconds
-setInterval(updateCDPStatus, 30000);
-// Initial CDP status check
-updateCDPStatus();

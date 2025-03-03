@@ -46,25 +46,20 @@ def query():
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    """Analysis endpoint"""
+    """API endpoint to perform quick analysis"""
     data = request.json
     token_id = data.get("token_id", "bitcoin")
     
     try:
-        # Import the tools
-        from tools.mean_reversion import get_token_indicators
+        # Import the integrated analysis tool
+        from tools.mean_reversion import integrated_crypto_analysis
         
-        # Use invoke instead of direct call
-        indicators = get_token_indicators.invoke({"token_id": token_id})
+        # Use the integrated analysis function
+        analysis_result = integrated_crypto_analysis(token_id)
         
-        if not indicators:
-            return jsonify({"error": "No indicators returned"}), 500
-            
-        return jsonify({"result": indicators})
-    except ImportError as e:
-        return jsonify({"error": "Failed to import required modules", "details": str(e)}), 500
+        return jsonify({"result": analysis_result})
     except Exception as e:
-        return jsonify({"error": "Failed to process request", "details": str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/technical', methods=['POST'])
 def technical():
@@ -125,15 +120,5 @@ def wallet():
     else:
         return jsonify({"error": "No wallet data found"}), 404
 
-# Handler for Vercel serverless deployment
-def handler(request, context):
-    """
-    This function is used by Vercel to handle serverless requests.
-    It forwards the request to the Flask app.
-    """
-    with app.request_context(request):
-        return app.full_dispatch_request()
-
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5050))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=5050, debug=True)
