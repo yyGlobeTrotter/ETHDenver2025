@@ -106,6 +106,15 @@ def analyze():
         
         # Get technical analysis data
         try:
+            try:
+                # First, ensure numpy and pandas are available
+                import numpy as np
+                import pandas as pd
+            except ImportError as e:
+                print(f"Error importing numpy or pandas: {e}")
+                raise ValueError(f"Required dependencies missing: {e}")
+                
+            # Now try to import the mean reversion service
             from tools.mean_reversion.core.indicators import MeanReversionService
             service = MeanReversionService(api_provider="coinapi")
             analysis_result = service.get_all_indicators(token_id)
@@ -206,6 +215,15 @@ def technical():
         
         # Import the Mean Reversion Service here
         try:
+            try:
+                # First, ensure numpy and pandas are available
+                import numpy as np
+                import pandas as pd
+            except ImportError as e:
+                print(f"Error importing numpy or pandas: {e}")
+                raise ValueError(f"Required dependencies missing: {e}")
+                
+            # Now try to import the mean reversion service
             from tools.mean_reversion.core.indicators import MeanReversionService
             
             # Initialize the service with default settings (CoinAPI for OHLC data)
