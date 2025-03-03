@@ -107,7 +107,7 @@ def analyze():
         # Get technical analysis data
         try:
             from tools.mean_reversion.core.indicators import MeanReversionService
-            service = MeanReversionService()
+            service = MeanReversionService(api_provider="coinapi")
             analysis_result = service.get_all_indicators(token_id)
             
             technical_data = {
@@ -208,8 +208,8 @@ def technical():
         try:
             from tools.mean_reversion.core.indicators import MeanReversionService
             
-            # Initialize the service with default settings (DeFi Llama API)
-            service = MeanReversionService()
+            # Initialize the service with default settings (CoinAPI for OHLC data)
+            service = MeanReversionService(api_provider="coinapi")
             
             # Get all indicators for the specified token
             analysis_result = service.get_all_indicators(token_id, window=min(days, 20))
